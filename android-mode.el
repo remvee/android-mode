@@ -29,12 +29,14 @@
 
 (defvar android-exclusive-processes ())
 (defmacro android-exclusive-sentinel (key proc)
-  `(when (not (find ,key android-exclusive-processes))
-     (set-process-sentinel ,proc
-                           (lambda (proc msg)
-                             (when (memq (process-status proc) '(exit signal))
-                               (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
-     (setq android-exclusive-processes (cons ,key android-exclusive-processes))))
+  `(if (not (find ,key android-exclusive-processes))
+     (progn
+       (set-process-sentinel ,proc
+                             (lambda (proc msg)
+                               (when (memq (process-status proc) '(exit signal))
+                                 (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
+       (setq android-exclusive-processes (cons ,key android-exclusive-processes)))
+     (message "%s already running" ,key)))
 
 (defun android-start-emulator ()
   "Start emulator."
