@@ -1,4 +1,12 @@
-(defconst *android-sdk-dir* "~/Development/android/sdk")
+(defgroup android-mode nil
+  "A minor mode for Android application development"
+  :prefix "android-mode-"
+  :group 'applications)
+
+(defcustom android-mode-sdk-dir "~/Android/sdk"
+  "Set to the directory containing the Android SDK."
+  :type 'string
+  :group 'android-mode)
 
 (defvar android-emulator-running nil)
 (defun android-start-emulator ()
@@ -7,7 +15,7 @@
   (when (not android-emulator-running)
     (set-process-sentinel (start-process-shell-command "*android-emulator*"
                                                        "*android-emulator*"
-                                                       (concat *android-sdk-dir* "/tools/emulator"))
+                                                       (concat android-mode-sdk-dir "/tools/emulator"))
                           (lambda (proc msg) (when (memq (process-status proc) '(exit signal))
                                                (setq android-emulator-running nil))))
     (setq android-emulator-running t)))
@@ -19,7 +27,7 @@
   (when (not android-logcat-running)
     (set-process-sentinel (start-process-shell-command "*android-logcat*"
                                                        "*android-logcat*"
-                                                       (concat *android-sdk-dir* "/tools/adb") "logcat")
+                                                       (concat android-modde-sdk-dir "/tools/adb") "logcat")
                           (lambda (proc msg) (when (memq (process-status proc) '(exit signal))
                                                (setq android-logcat-running nil))))
     (setq android-logcat-running t)))
