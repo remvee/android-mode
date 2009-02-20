@@ -60,3 +60,5 @@
   :global t
   :group 'android
   :version "0.0")
+
+(provide 'android-mode)
