@@ -8,29 +8,28 @@
   :type 'string
   :group 'android-mode)
 
-(defvar android-emulator-running nil)
+(defvar android-exclusive-processes ())
+(defmacro android-exclusive-sentinel (key proc)
+  `(when (not (find ,key android-exclusive-processes))
+     (set-process-sentinel ,proc
+                           (lambda (proc msg)
+                             (when (memq (process-status proc) '(exit signal))
+                               (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
+     (setq android-exclusive-processes (cons ,key android-exclusive-processes))))
+
 (defun android-start-emulator ()
   "Start emulator."
   (interactive)
-  (when (not android-emulator-running)
-    (set-process-sentinel (start-process-shell-command "*android-emulator*"
-                                                       "*android-emulator*"
-                                                       (concat android-mode-sdk-dir "/tools/emulator"))
-                          (lambda (proc msg) (when (memq (process-status proc) '(exit signal))
-                                               (setq android-emulator-running nil))))
-    (setq android-emulator-running t)))
+  (android-exclusive-sentinel 'emulator (start-process-shell-command "*android-emulator*"
+                                                                     "*android-emulator*"
+                                                                     (concat android-mode-sdk-dir "/tools/emulator"))))
 
-(defvar android-logcat-running nil)
 (defun android-start-logcat ()
   "Start logcat in a separate buffer."
   (interactive)
-  (when (not android-logcat-running)
-    (set-process-sentinel (start-process-shell-command "*android-logcat*"
-                                                       "*android-logcat*"
-                                                       (concat android-modde-sdk-dir "/tools/adb") "logcat")
-                          (lambda (proc msg) (when (memq (process-status proc) '(exit signal))
-                                               (setq android-logcat-running nil))))
-    (setq android-logcat-running t)))
+  (android-exclusive-sentinel 'logcat (start-process-shell-command "*android-logcat*"
+                                                                   "*android-logcat*"
+                                                                   (concat android-mode-sdk-dir "/tools/adb") "logcat")))
 
 (defun android-root ()
   "Look for build.xml file to find project root of android application."
