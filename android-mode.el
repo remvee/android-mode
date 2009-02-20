@@ -52,19 +52,11 @@
   (android-in-root
    (compile "ant reinstall")))
 
-(defvar android-mode nil)
-(make-variable-buffer-local 'android-mode)
-
-(defun android-mode (&optional arg)
-  "Android minor mode."
-  (interactive "P")
-  (setq android-mode
-        (if (null arg)
-          (not android-mode)
-          (> (prefix-numeric-value arg) 0)))
-  (if android-mode
-    (global-set-key [f12] 'android-compile-reinstall)
-    (global-unset-key [f12])))
-
-(if (not (assq 'android-mode minor-mode-alist)) 
-  (setq minor-mode-alist (cons '(android-mode " Android") minor-mode-alist))) 
+(define-minor-mode android-mode
+  "Android application development minor mode."
+  nil
+  " Android"
+  '(("\C-c\C-x" . android-compile-reinstall))
+  :global t
+  :group 'android
+  :version "0.0")
