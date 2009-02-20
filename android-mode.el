@@ -75,9 +75,9 @@
   "Android application development minor mode."
   nil
   " Android"
-  '(("\C-c\C-x" . android-compile-reinstall))
-  :global t
-  :group 'android
-  :version "0.0")
+  '(("\C-c\C-x" . android-compile-reinstall)))
+
+(add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
+(add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
 
 (provide 'android-mode)
