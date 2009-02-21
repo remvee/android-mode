@@ -100,13 +100,13 @@
   "Android application development minor mode."
   nil
   " Android"
-  '(("\C-c\C-d" . android-start-ddms)
-    ("\C-c\C-e" . android-start-emulator)
-    ("\C-c\C-l" . android-logcat)
-    ("\C-c\C-c" . android-ant-compile)
-    ("\C-c\C-i" . android-ant-install)
-    ("\C-c\C-r" . android-ant-reinstall)
-    ("\C-c\C-u" . android-ant-uninstall)))
+  '(("\C-c\C-cd" . android-start-ddms)
+    ("\C-c\C-ce" . android-start-emulator)
+    ("\C-c\C-cl" . android-logcat)
+    ("\C-c\C-cc" . android-ant-compile)
+    ("\C-c\C-ci" . android-ant-install)
+    ("\C-c\C-cr" . android-ant-reinstall)
+    ("\C-c\C-cu" . android-ant-uninstall)))
 
 (add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
 (add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
