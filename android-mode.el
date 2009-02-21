@@ -79,11 +79,22 @@
   `(let ((default-directory (android-root)))
      ,body))
 
-(defun android-compile-reinstall ()
-  "Run 'ant reinstall' in the project root directory."
-  (interactive)
+(defun android-ant (task)
+  "Run ant task in the project root directory."
+  (interactive "s")
   (android-in-root
-   (compile "ant reinstall")))
+   (compile (concat "ant " task))))
+
+(defmacro android-defun-ant-task (task)
+  `(defun ,(intern (concat "android-ant-" task)) ()
+     ,(concat "Run 'ant " task "' in the project root directory.")
+     (interactive)
+     (android-ant ,task)))
+
+(android-defun-ant-task "compile")
+(android-defun-ant-task "install")
+(android-defun-ant-task "reinstall")
+(android-defun-ant-task "uninstall")
 
 (define-minor-mode android-mode
   "Android application development minor mode."
@@ -92,7 +103,10 @@
   '(("\C-c\C-d" . android-start-ddms)
     ("\C-c\C-e" . android-start-emulator)
     ("\C-c\C-l" . android-logcat)
-    ("\C-c\C-x" . android-compile-reinstall)))
+    ("\C-c\C-c" . android-ant-compile)
+    ("\C-c\C-i" . android-ant-install)
+    ("\C-c\C-r" . android-ant-reinstall)
+    ("\C-c\C-u" . android-ant-uninstall)))
 
 (add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
 (add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
