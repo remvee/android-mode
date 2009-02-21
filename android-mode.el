@@ -38,7 +38,7 @@
           (setq android-exclusive-processes (cons ,key android-exclusive-processes)))))
 
 (defun android-start-emulator ()
-  "Start emulator."
+  "Launch Android emulator."
   (interactive)
   (unless (android-exclusive-sentinel 'emulator
                                       (start-process-shell-command "*android-emulator*"
@@ -46,8 +46,17 @@
                                                                    (concat android-mode-sdk-dir "/tools/emulator")))
     (message "emulator already running")))
 
+(defun android-start-ddms ()
+  "Launch Dalvik Debug Monitor Service tool."
+  (interactive)
+  (unless (android-exclusive-sentinel 'ddms
+                                      (start-process-shell-command "*android-ddms*"
+                                                                   "*android-ddms*"
+                                                                   (concat android-mode-sdk-dir "/tools/ddms")))
+    (message "ddms already running")))
+
 (defun android-logcat ()
-  "Start logcat in a separate buffer."
+  "Switch to ADB logcat buffer, create it when it doesn't exists yet."
   (interactive)
   (android-exclusive-sentinel 'logcat
                               (start-process-shell-command "*android-logcat*"
@@ -80,7 +89,8 @@
   "Android application development minor mode."
   nil
   " Android"
-  '(("\C-c\C-e" . android-start-emulator)
+  '(("\C-c\C-d" . android-start-ddms)
+    ("\C-c\C-e" . android-start-emulator)
     ("\C-c\C-l" . android-logcat)
     ("\C-c\C-x" . android-compile-reinstall)))
 
