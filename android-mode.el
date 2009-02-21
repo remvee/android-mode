@@ -46,7 +46,7 @@
                                                                    (concat android-mode-sdk-dir "/tools/emulator")))
     (message "emulator already running")))
 
-(defun android-start-logcat ()
+(defun android-logcat ()
   "Start logcat in a separate buffer."
   (interactive)
   (android-exclusive-sentinel 'logcat
@@ -81,7 +81,7 @@
   nil
   " Android"
   '(("\C-c\C-e" . android-start-emulator)
-    ("\C-c\C-l" . android-start-logcat)
+    ("\C-c\C-l" . android-logcat)
     ("\C-c\C-x" . android-compile-reinstall)))
 
 (add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
