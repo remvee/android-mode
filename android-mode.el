@@ -29,28 +29,31 @@
 
 (defvar android-exclusive-processes ())
 (defmacro android-exclusive-sentinel (key proc)
-  `(if (not (find ,key android-exclusive-processes))
-     (progn
-       (set-process-sentinel ,proc
-                             (lambda (proc msg)
-                               (when (memq (process-status proc) '(exit signal))
-                                 (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
-       (setq android-exclusive-processes (cons ,key android-exclusive-processes)))
-     (message "%s already running" ,key)))
+  `(and (not (find ,key android-exclusive-processes))
+        (progn
+          (set-process-sentinel ,proc
+                                (lambda (proc msg)
+                                  (when (memq (process-status proc) '(exit signal))
+                                    (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
+          (setq android-exclusive-processes (cons ,key android-exclusive-processes)))))
 
 (defun android-start-emulator ()
   "Start emulator."
   (interactive)
-  (android-exclusive-sentinel 'emulator (start-process-shell-command "*android-emulator*"
-                                                                     "*android-emulator*"
-                                                                     (concat android-mode-sdk-dir "/tools/emulator"))))
+  (unless (android-exclusive-sentinel 'emulator
+                                      (start-process-shell-command "*android-emulator*"
+                                                                   "*android-emulator*"
+                                                                   (concat android-mode-sdk-dir "/tools/emulator")))
+    (message "emulator already running")))
 
 (defun android-start-logcat ()
   "Start logcat in a separate buffer."
   (interactive)
-  (android-exclusive-sentinel 'logcat (start-process-shell-command "*android-logcat*"
-                                                                   "*android-logcat*"
-                                                                   (concat android-mode-sdk-dir "/tools/adb") "logcat")))
+  (android-exclusive-sentinel 'logcat
+                              (start-process-shell-command "*android-logcat*"
+                                                           "*android-logcat*"
+                                                           (concat android-mode-sdk-dir "/tools/adb") "logcat"))
+  (switch-to-buffer "*android-logcat*"))
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
