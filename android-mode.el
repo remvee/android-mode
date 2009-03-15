@@ -27,6 +27,11 @@
   :type 'string
   :group 'android-mode)
 
+(defcustom android-mode-key-prefix "\C-c \C-c"
+  "Minor mode keys prefix."
+  :type 'string
+  :group 'android-mode)
+
 (defvar android-exclusive-processes ())
 (defmacro android-exclusive-sentinel (key proc)
   `(and (not (find ,key android-exclusive-processes))
@@ -96,17 +101,29 @@
 (android-defun-ant-task "reinstall")
 (android-defun-ant-task "uninstall")
 
+(defconst android-mode-keys
+  '(("d" . android-start-ddms)
+    ("e" . android-start-emulator)
+    ("l" . android-logcat)
+    ("c" . android-ant-compile)
+    ("i" . android-ant-install)
+    ("r" . android-ant-reinstall)
+    ("u" . android-ant-uninstall)))
+
+(defvar android-mode-map (make-sparse-keymap))
+(add-hook 'android-mode-hook
+          (lambda ()
+            (dolist (spec android-mode-keys)
+              (define-key
+                android-mode-map
+                (read-kbd-macro (concat android-mode-key-prefix " " (car spec)))
+                (cdr spec)))))
+
 (define-minor-mode android-mode
   "Android application development minor mode."
   nil
   " Android"
-  '(("\C-c\C-cd" . android-start-ddms)
-    ("\C-c\C-ce" . android-start-emulator)
-    ("\C-c\C-cl" . android-logcat)
-    ("\C-c\C-cc" . android-ant-compile)
-    ("\C-c\C-ci" . android-ant-install)
-    ("\C-c\C-cr" . android-ant-reinstall)
-    ("\C-c\C-cu" . android-ant-uninstall)))
+  android-mode-map)
 
 (add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
 (add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
