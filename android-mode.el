@@ -86,7 +86,7 @@
 
 (defun android-ant (task)
   "Run ant task in the project root directory."
-  (interactive "s")
+  (interactive "sTask: ")
   (android-in-root
    (compile (concat "ant " task))))
 
