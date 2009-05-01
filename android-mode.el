@@ -32,6 +32,17 @@
   :type 'string
   :group 'android-mode)
 
+(defun android-list-avd ()
+  "List of Android Virtual Devices installed on local machine."
+  (let* ((command (concat android-mode-sdk-dir "/tools/android list avd"))
+         (output (shell-command-to-string command))
+         (result nil)
+         (offset 0))
+    (while (string-match "Name: \\(.*\\)" output offset)
+      (setq result (cons (match-string 1 output) result))
+      (setq offset (match-end 0)))
+    (reverse result)))
+
 (defvar android-exclusive-processes ())
 (defmacro android-exclusive-sentinel (key proc)
   `(and (not (find ,key android-exclusive-processes))
