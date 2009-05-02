@@ -32,6 +32,11 @@
   :type 'string
   :group 'android-mode)
 
+(defcustom android-mode-avd ""
+  "Default AVD to use."
+  :type 'string
+  :group 'android-mode)
+
 (defun android-list-avd ()
   "List of Android Virtual Devices installed on local machine."
   (let* ((command (concat android-mode-sdk-dir "/tools/android list avd"))
@@ -44,40 +49,33 @@
     (reverse result)))
 
 (defvar android-exclusive-processes ())
-(defmacro android-exclusive-sentinel (key proc)
-  `(and (not (find ,key android-exclusive-processes))
-        (progn
-          (set-process-sentinel ,proc
-                                (lambda (proc msg)
-                                  (when (memq (process-status proc) '(exit signal))
-                                    (setq android-exclusive-processes (delete ,key android-exclusive-processes)))))
-          (setq android-exclusive-processes (cons ,key android-exclusive-processes)))))
-
+(defun android-start-exclusive-command (name command &rest args)
+  (and (not (find (intern name) android-exclusive-processes))
+       (set-process-sentinel (apply 'start-process-shell-command name name command args)
+                             (lambda (proc msg)
+                               (when (memq (process-status proc) '(exit signal))
+                                 (setq android-exclusive-processes
+                                       (delete (intern (process-name proc)) android-exclusive-processes)))))
+       (setq android-exclusive-processes (cons (intern name) android-exclusive-processes))))
+  
 (defun android-start-emulator ()
   "Launch Android emulator."
   (interactive)
-  (unless (android-exclusive-sentinel 'emulator
-                                      (start-process-shell-command "*android-emulator*"
-                                                                   "*android-emulator*"
-                                                                   (concat android-mode-sdk-dir "/tools/emulator")))
-    (message "emulator already running")))
+  (let ((avd (or (and (not (string= android-mode-avd "")) android-mode-avd)
+                 (completing-read "Android Virtual Device: " (android-list-avd)))))
+    (unless (android-start-exclusive-command (concat "*android-emulator-" avd "*") (concat android-mode-sdk-dir "/tools/emulator -avd " avd))
+      (message (concat "emulator " avd " already running")))))
 
 (defun android-start-ddms ()
   "Launch Dalvik Debug Monitor Service tool."
   (interactive)
-  (unless (android-exclusive-sentinel 'ddms
-                                      (start-process-shell-command "*android-ddms*"
-                                                                   "*android-ddms*"
-                                                                   (concat android-mode-sdk-dir "/tools/ddms")))
+  (unless (android-start-exclusive-command "*android-ddms*" (concat android-mode-sdk-dir "/tools/ddms"))
     (message "ddms already running")))
 
 (defun android-logcat ()
   "Switch to ADB logcat buffer, create it when it doesn't exists yet."
   (interactive)
-  (android-exclusive-sentinel 'logcat
-                              (start-process-shell-command "*android-logcat*"
-                                                           "*android-logcat*"
-                                                           (concat android-mode-sdk-dir "/tools/adb") "logcat"))
+  (android-start-exclusive-command "*android-logcat*" (concat android-mode-sdk-dir "/tools/adb") "logcat")
   (switch-to-buffer "*android-logcat*"))
 
 (defun android-root ()
