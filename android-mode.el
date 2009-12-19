@@ -1,7 +1,11 @@
 ;;; android-mode.el -- Minor mode for Android application development
 
 ;; Copyright (C) 2009 R.W van 't Veer
-;;
+
+;; Author: R.W. van 't Veer
+;; Created: 20 Feb 2009
+;; Keywords: tools processes
+
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
 ;; as published by the Free Software Foundation; either version 3
@@ -16,6 +20,13 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+
+;; Provides support for running Android SDK subprocesses like the
+;; emulator, logcat, ddms and ant.
+
+;;; Code:
 
 (require 'cl)
 
@@ -96,7 +107,7 @@
      ,body))
 
 (defun android-ant (task)
-  "Run ant task in the project root directory."
+  "Run ant TASK in the project root directory."
   (interactive "sTask: ")
   (android-in-root
    (compile (concat "ant " task))))
@@ -140,3 +151,5 @@
 (add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
 
 (provide 'android-mode)
+
+;;; android-mode.el ends here
