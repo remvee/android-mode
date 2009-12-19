@@ -59,7 +59,9 @@
     (while (string-match "Name: \\(.*\\)" output offset)
       (setq result (cons (match-string 1 output) result))
       (setq offset (match-end 0)))
-    (reverse result)))
+    (if result
+      (reverse result)
+      (error "no Android Virtual Devices found"))))
 
 (defvar android-exclusive-processes ())
 (defun android-start-exclusive-command (name command &rest args)
