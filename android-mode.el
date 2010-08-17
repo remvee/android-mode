@@ -120,6 +120,7 @@
      (interactive)
      (android-ant ,task)))
 
+(android-defun-ant-task "clean")
 (android-defun-ant-task "compile")
 (android-defun-ant-task "install")
 (android-defun-ant-task "reinstall")
@@ -129,6 +130,7 @@
   '(("d" . android-start-ddms)
     ("e" . android-start-emulator)
     ("l" . android-logcat)
+    ("C" . android-ant-clean)
     ("c" . android-ant-compile)
     ("i" . android-ant-install)
     ("r" . android-ant-reinstall)
