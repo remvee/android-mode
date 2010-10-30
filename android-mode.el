@@ -123,7 +123,6 @@
 (android-defun-ant-task "clean")
 (android-defun-ant-task "compile")
 (android-defun-ant-task "install")
-(android-defun-ant-task "reinstall")
 (android-defun-ant-task "uninstall")
 
 (defconst android-mode-keys
