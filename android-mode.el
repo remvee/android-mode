@@ -10,12 +10,12 @@
 ;; modify it under the terms of the GNU General Public License
 ;; as published by the Free Software Foundation; either version 3
 ;; of the License, or (at your option) any later version.
-;; 
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;; 
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
@@ -40,6 +40,11 @@
   :type 'string
   :group 'android-mode)
 
+(defcustom android-mode-sdk-tool-subdirs '("tools" "platform-tools")
+  "List of subdirectors in the SDK containing commandline tools."
+  :type '(repeat string)
+  :group 'android-mode)
+
 (defcustom android-mode-key-prefix "\C-c \C-c"
   "Minor mode keys prefix."
   :type 'string
@@ -50,9 +55,18 @@
   :type 'string
   :group 'android-mode)
 
+(defun android-tool-path (name)
+  "Find path to SDK tool."
+  (or (find-if #'file-exists-p
+               (mapcar (lambda (path)
+                         (string-join "/"
+                                      `(,android-mode-sdk-dir ,path ,name)))
+                       android-mode-sdk-tool-subdirs))
+      (error "can't find SDK tool: %s" name)))
+
 (defun android-list-avd ()
   "List of Android Virtual Devices installed on local machine."
-  (let* ((command (concat android-mode-sdk-dir "/tools/android list avd"))
+  (let* ((command (concat (android-tool-path "android") " list avd"))
          (output (shell-command-to-string command))
          (result nil)
          (offset 0))
@@ -72,25 +86,25 @@
                                  (setq android-exclusive-processes
                                        (delete (intern (process-name proc)) android-exclusive-processes)))))
        (setq android-exclusive-processes (cons (intern name) android-exclusive-processes))))
-  
+
 (defun android-start-emulator ()
   "Launch Android emulator."
   (interactive)
   (let ((avd (or (and (not (string= android-mode-avd "")) android-mode-avd)
                  (completing-read "Android Virtual Device: " (android-list-avd)))))
-    (unless (android-start-exclusive-command (concat "*android-emulator-" avd "*") (concat android-mode-sdk-dir "/tools/emulator -avd " avd))
+    (unless (android-start-exclusive-command (concat "*android-emulator-" avd "*") (concat (android-tool-path "emulator") " -avd " avd))
       (message (concat "emulator " avd " already running")))))
 
 (defun android-start-ddms ()
   "Launch Dalvik Debug Monitor Service tool."
   (interactive)
-  (unless (android-start-exclusive-command "*android-ddms*" (concat android-mode-sdk-dir "/tools/ddms"))
+  (unless (android-start-exclusive-command "*android-ddms*" (android-tool-path "ddms"))
     (message "ddms already running")))
 
 (defun android-logcat ()
   "Switch to ADB logcat buffer, create it when it doesn't exists yet."
   (interactive)
-  (android-start-exclusive-command "*android-logcat*" (concat android-mode-sdk-dir "/tools/adb") "logcat")
+  (android-start-exclusive-command "*android-logcat*" (android-tool-path "adb") "logcat")
   (switch-to-buffer "*android-logcat*"))
 
 (defun android-root ()
