@@ -45,6 +45,11 @@
   :type '(repeat string)
   :group 'android-mode)
 
+(defcustom android-mode-sdk-tool-extensions '("" ".bat" ".exe")
+  "List of possible extensions for commandline tools."
+  :type '(repeat string)
+  :group 'android-mode)
+
 (defcustom android-mode-key-prefix "\C-c \C-c"
   "Minor mode keys prefix."
   :type 'string
@@ -54,6 +59,20 @@
   "Default AVD to use."
   :type 'string
   :group 'android-mode)
+
+(defun android-tool-path (name)
+  "Find path to SDK tool."
+  (or (find-if #'file-exists-p
+               (apply #'vconcat
+                      (mapcar (lambda (path)
+                                (mapcar (lambda (ext)
+                                          (mapconcat 'identity
+                                                     `(,android-mode-sdk-dir
+                                                       ,path ,(concat name ext))
+                                                     "/"))
+                                        android-mode-sdk-tool-extensions))
+                              android-mode-sdk-tool-subdirs)))
+      (error "can't find SDK tool: %s" name)))
 
 (defun android-tool-path (name)
   "Find path to SDK tool."
