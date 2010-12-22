@@ -63,7 +63,7 @@
 (defun android-tool-path (name)
   "Find path to SDK tool."
   (or (find-if #'file-exists-p
-               (apply #'vconcat
+               (apply #'append
                       (mapcar (lambda (path)
                                 (mapcar (lambda (ext)
                                           (mapconcat 'identity
@@ -72,16 +72,6 @@
                                                      "/"))
                                         android-mode-sdk-tool-extensions))
                               android-mode-sdk-tool-subdirs)))
-      (error "can't find SDK tool: %s" name)))
-
-(defun android-tool-path (name)
-  "Find path to SDK tool."
-  (or (find-if #'file-exists-p
-               (mapcar (lambda (path)
-                         (mapconcat 'identity
-                                    `(,android-mode-sdk-dir ,path ,name)
-                                    "/"))
-                       android-mode-sdk-tool-subdirs))
       (error "can't find SDK tool: %s" name)))
 
 (defun android-list-avd ()
