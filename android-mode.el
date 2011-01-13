@@ -61,20 +61,26 @@
   :group 'android-mode)
 
 (defun android-local-sdk-dir ()
-  "Try to find android sdk directory through the local.properties file in the
-android project base directory. If local.properties doesn't exist, return 
-`android-mode-sdk-dir' variable."
-  (let ((local-properties (concat (android-root) "local.properties")))
-    (if (file-exists-p local-properties)
-        (let ((buffer (find-file-noselect local-properties)))
-          (set-buffer buffer)
-          (goto-char (point-min))
-          (re-search-forward "^sdk\.dir=" nil 'move)
-          (let ((sdk-dir (file-truename (buffer-substring (point)
-                                                          (point-at-eol)))))
-            (kill-buffer buffer)
-            sdk-dir))
-      android-mode-sdk-dir)))
+  "Try to find android sdk directory through the local.properties
+file in the android project base directory.  If local.properties
+doesn't exist, it does not contain the sdk-dir property or the
+referred directory does not exist, return `android-mode-sdk-dir'
+variable."
+  (or
+   (android-in-root
+    (let ((local-properties "local.properties")
+          (buffer "*android-mode*/local.properties"))
+      (and (file-exists-p local-properties)
+           (let ((buffer (get-buffer-create buffer)))
+             (with-current-buffer buffer
+               (erase-buffer)
+               (insert-file local-properties)
+               (goto-char (point-min))
+               (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
+                    (let ((sdk-dir (match-string 1)))
+                      (kill-buffer buffer)
+                      (and (file-exists-p sdk-dir) sdk-dir))))))))
+   android-mode-sdk-dir))
 
 (defun android-tool-path (name)
   "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
