@@ -90,7 +90,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                       (mapcar (lambda (path)
                                 (mapcar (lambda (ext)
                                           (mapconcat 'identity
-                                                     `(,(android-mode-local-sdk-dir)
+                                                     `(,(android-local-sdk-dir)
                                                        ,path ,(concat name ext))
                                                      "/"))
                                         android-mode-sdk-tool-extensions))
