@@ -198,7 +198,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   android-mode-map)
 
 (add-hook 'dired-mode-hook (lambda () (when (android-root) (android-mode t))))
-(add-hook 'find-file-hooks (lambda () (when (android-root) (android-mode t))))
+(add-hook 'find-file-hook (lambda () (when (android-root) (android-mode t))))
 
 (provide 'android-mode)
 
