@@ -74,7 +74,7 @@ variable."
            (let ((buffer (get-buffer-create buffer)))
              (with-current-buffer buffer
                (erase-buffer)
-               (insert-file local-properties)
+               (insert-file-contents local-properties)
                (goto-char (point-min))
                (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
                     (let ((sdk-dir (match-string 1)))
