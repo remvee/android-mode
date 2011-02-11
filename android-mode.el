@@ -1,10 +1,12 @@
-;;; android-mode.el -- Minor mode for Android application development
+;;; android-mode.el --- Minor mode for Android application development
 
-;; Copyright (C) 2009 R.W van 't Veer
+;; Copyright (C) 2009, 2010, 2011 R.W van 't Veer
 
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
 ;; Keywords: tools processes
+;; Version: 0.1
+;; URL: https://github.com/remvee/android-mode
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -24,11 +26,14 @@
 ;;; Commentary:
 
 ;; Provides support for running Android SDK subprocesses like the
-;; emulator, logcat, ddms and ant.
+;; emulator, logcat, ddms and ant.  When loaded `dired-mode' and
+;; `find-file' hooks are added to automatically enable `android-mode'
+;; when opening a file or directory in an android project.
+
 
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile (require 'cl))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
@@ -294,6 +299,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                 (read-kbd-macro (concat android-mode-key-prefix " " (car spec)))
                 (cdr spec)))))
 
+;;;###autoload
 (define-minor-mode android-mode
   "Android application development minor mode."
   nil
