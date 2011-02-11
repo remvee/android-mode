@@ -62,14 +62,7 @@
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
-  (let ((cwd default-directory)
-        (found nil)
-        (max 10))
-    (while (and (not found) (> max 0))
-      (if (file-exists-p (concat cwd "AndroidManifest.xml"))
-        (setq found cwd)
-        (setq cwd (concat cwd "../") max (- max 1))))
-    (and found (expand-file-name found))))
+  (locate-dominating-file default-directory "AndroidManifest.xml"))
 
 (defmacro android-in-root (body)
   `(let ((default-directory (android-root)))
