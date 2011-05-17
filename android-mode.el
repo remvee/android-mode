@@ -65,6 +65,33 @@
   :type 'string
   :group 'android-mode)
 
+(defface android-mode-verbose-face '((t (:foreground "DodgerBlue")))
+  "Font Lock face used to highlight VERBOSE log records."
+  :group 'android-mode)
+
+(defface android-mode-debug-face '((t (:foreground "ForestGreen")))
+  "Font Lock face used to highlight DEBUG log records."
+  :group 'android-mode)
+
+(defface android-mode-info-face '((t (:foreground "Gray45")))
+  "Font Lock face used to highlight INFO log records."
+  :group 'android-mode)
+
+(defface android-mode-warning-face '((t (:foreground "Red")))
+  "Font Lock face used to highlight WARN log records."
+  :group 'android-mode)
+
+(defface android-mode-error-face '((t (:foreground "Red" :bold t)))
+  "Font Lock face used to highlight ERROR log records."
+  :group 'android-mode)
+
+(defvar android-mode-log-face-alist
+  '(("V" . android-mode-verbose-face)
+    ("D" . android-mode-debug-face)
+    ("I" . android-mode-info-face)
+    ("W" . android-mode-warning-face)
+    ("E" . android-mode-error-face)))
+
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
   (locate-dominating-file default-directory "AndroidManifest.xml"))
@@ -221,19 +248,20 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
             (setq pos (match-end 0))
             (goto-char (point-max))
             (if (string-match "^\\(.\\)/\\(.*\\)( *\\([0-9]+\\)): \\(.*\\)$" line)
-              (let ((level (match-string 1 line))
-                    (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
-                    (pid (match-string 3 line))
-                    (msg (match-string 4 line)))
+              (let* ((level (match-string 1 line))
+                     (level-face (or (cdr (assoc level android-mode-log-face-alist)) android-mode-info-face))
+                     (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
+                     (pid (match-string 3 line))
+                     (msg (match-string 4 line)))
                 (insert (propertize level
-                                    'font-lock-face 'font-lock-comment-face))
+                                    'font-lock-face level-face))
                 (tab-to-tab-stop)
                 (insert (propertize tag
                                     'font-lock-face 'font-lock-function-name-face))
                 (insert (propertize (concat "("  pid ")")
                                     'font-lock-face 'font-lock-constant-face))
                 (tab-to-tab-stop)
-                (insert (android-logcat-prepare-msg msg)))
+                (insert (android-logcat-prepare-msg (propertize msg 'font-lock-face level-face))))
               (insert (propertize line
                                   'font-lock-face 'font-lock-warning-face)))
             (insert "\n")))
