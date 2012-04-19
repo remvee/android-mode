@@ -161,6 +161,19 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (error output)
       (find-file expanded-path))))
 
+(defun android-list-targets ()
+  "List Android SDKs installed on local machine."
+  (let* ((command (concat (android-tool-path "android") " list target"))
+         (output (shell-command-to-string command))
+         (result nil)
+         (offset 0))
+    (while (string-match "id: [[:digit:]]+ or \"\\(.*\\)\"" output offset)
+      (setq result (cons (match-string 1 output) result))
+      (setq offset (match-end 0)))
+    (if result
+        (reverse result)
+      (error "no Android Targets found"))))
+
                                         ; emulator
 
 (defun android-list-avd ()
