@@ -149,6 +149,17 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
        (setq android-exclusive-processes (cons (intern name)
                                                android-exclusive-processes))))
 
+(defun android-create-project (path package activity target)
+  "Create new Android project with SDK app"
+  (interactive "FPath: \nMPackage: \nMActivity: \nMTarget: ")
+  (let* ((expanded-path (expand-file-name path))
+         (command (format "%s create project --path %S --package %s --activity %s --target %s"
+                          (android-tool-path "android")
+                          expanded-path package activity target))
+         (output (shell-command-to-string command)))
+    (if (string-equal "Error" (substring output 0 5))
+        (error output)
+      (find-file expanded-path))))
 
                                         ; emulator
 
@@ -316,7 +327,8 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     ("c" . android-ant-compile)
     ("i" . android-ant-install)
     ("r" . android-ant-reinstall)
-    ("u" . android-ant-uninstall)))
+    ("u" . android-ant-uninstall)
+    ("N" . android-create-project)))
 
 (defvar android-mode-map (make-sparse-keymap))
 (add-hook 'android-mode-hook
