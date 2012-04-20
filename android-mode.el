@@ -149,11 +149,12 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
        (setq android-exclusive-processes (cons (intern name)
                                                android-exclusive-processes))))
 
-(defun android-create-project (path package activity target)
+(defun android-create-project (path package activity)
   "Create new Android project with SDK app"
-  (interactive "FPath: \nMPackage: \nMActivity: \nMTarget: ")
-  (let* ((expanded-path (expand-file-name path))
-         (command (format "%s create project --path %S --package %s --activity %s --target %s"
+  (interactive "FPath: \nMPackage: \nMActivity: ")
+  (let* ((target (completing-read "Target: " (android-list-targets)))
+         (expanded-path (expand-file-name path))
+         (command (format "%s create project --path %S --package %s --activity %s --target %S"
                           (android-tool-path "android")
                           expanded-path package activity target))
          (output (shell-command-to-string command)))
