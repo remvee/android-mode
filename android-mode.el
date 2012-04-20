@@ -326,7 +326,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
      (android-ant ,task)))
 
 (android-defun-ant-task "clean")
-(android-defun-ant-task "compile")
+(android-defun-ant-task "debug")
 (android-defun-ant-task "install")
 (android-defun-ant-task "uninstall")
 
@@ -338,7 +338,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     ("e" . android-start-emulator)
     ("l" . android-logcat)
     ("C" . android-ant-clean)
-    ("c" . android-ant-compile)
+    ("c" . android-ant-debug)
     ("i" . android-ant-install)
     ("r" . android-ant-reinstall)
     ("u" . android-ant-uninstall)
