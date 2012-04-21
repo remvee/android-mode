@@ -311,10 +311,21 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (goto-char (point-max)))
 
 (defun android-project-package ()
-  "Return the package of the Android project.
-Currently returns fake data."
-  ;; TODO write
-  "com.foo.bar")
+  "Return the package of the Android project"
+  (interactive)
+  (android-in-root
+   (let ((manifest "AndroidManifest.xml")
+         (buffer "*android-mode*/AndroidManifest.xml"))
+     (and (file-exists-p manifest)
+          (let ((buffer (get-buffer-create buffer)))
+            (with-current-buffer buffer
+              (erase-buffer)
+              (insert-file-contents manifest)
+              (goto-char (point-min))
+              (and (re-search-forward "package=\"\\(.*?\\)\"" nil t)
+                   (let ((package (match-string 1)))
+                     (kill-buffer buffer)
+                     package))))))))
 
 (defun android-launcher-activity ()
   "Return the main launcher activity class name.
