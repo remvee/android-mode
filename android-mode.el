@@ -310,6 +310,34 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (switch-to-buffer android-logcat-buffer)
   (goto-char (point-max)))
 
+(defun android-project-package ()
+  "Return the package of the Android project.
+Currently returns fake data."
+  ;; TODO write
+  "com.foo.bar")
+
+(defun android-launcher-activity ()
+  "Return the main launcher activity class name.
+Currently returns fake data."
+  ;; TODO write
+  ".MainActivity")
+
+(defun android-start-app ()
+  "Start application on the device/emulator."
+  (interactive)
+  (let* ((command (concat (android-tool-path "adb") " shell am start -n "
+                          (android-project-package) "/"
+                          (android-launcher-activity)))
+         (output (shell-command-to-string command)))
+    (when (string-equal "Error" (substring output 0 5))
+      (error output))))
+
+(defun android-build-install-run-project ()
+  "Convenience function to get the app started in one step"
+  (interactive)
+  (and (android-ant-debug)
+       (android-ant-installd)
+       (android-start-app)))
 
                                         ; ant
 
