@@ -320,14 +320,16 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
    (compile (concat "ant " task))))
 
 (defmacro android-defun-ant-task (task)
-  `(defun ,(intern (concat "android-ant-" task)) ()
+  `(defun ,(intern (concat "android-ant-"
+                           (replace-regexp-in-string "[[:space:]]" "-" task)))
+     ()
      ,(concat "Run 'ant " task "' in the project root directory.")
      (interactive)
      (android-ant ,task)))
 
 (android-defun-ant-task "clean")
 (android-defun-ant-task "debug")
-(android-defun-ant-task "install")
+(android-defun-ant-task "installd")
 (android-defun-ant-task "uninstall")
 
 
@@ -339,7 +341,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     ("l" . android-logcat)
     ("C" . android-ant-clean)
     ("c" . android-ant-debug)
-    ("i" . android-ant-install)
+    ("i" . android-ant-installd)
     ("r" . android-ant-reinstall)
     ("u" . android-ant-uninstall)
     ("N" . android-create-project)))
