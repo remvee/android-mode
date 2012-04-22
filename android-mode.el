@@ -329,9 +329,22 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
 
 (defun android-launcher-activity ()
   "Return the main launcher activity class name.
-Currently returns fake data."
-  ;; TODO write
-  ".MainActivity")
+
+The function grabs the first activity name as a first approximation."
+  (interactive)
+  (android-in-root
+   (let ((manifest "AndroidManifest.xml")
+         (buffer "*android-mode*/AndroidManifest.xml"))
+     (and (file-exists-p manifest)
+          (let ((buffer (get-buffer-create buffer)))
+            (with-current-buffer buffer
+              (erase-buffer)
+              (insert-file-contents manifest)
+              (goto-char (point-min))
+              (and (re-search-forward "android:name=\"\\(.*?\\)\"" nil t)
+                   (let ((activity-name (match-string 1)))
+                     (kill-buffer buffer)
+                     activity-name))))))))
 
 (defun android-start-app ()
   "Start application on the device/emulator."
