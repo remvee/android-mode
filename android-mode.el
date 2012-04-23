@@ -356,13 +356,6 @@ The function grabs the first activity name as a first approximation."
     (when (string-equal "Error" (substring output 0 5))
       (error output))))
 
-(defun android-build-install-run-project ()
-  "Convenience function to get the app started in one step"
-  (interactive)
-  (and (android-ant-debug)
-       (android-ant-installd)
-       (android-start-app)))
-
                                         ; ant
 
 (defun android-ant (task)
