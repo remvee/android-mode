@@ -149,6 +149,31 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
        (setq android-exclusive-processes (cons (intern name)
                                                android-exclusive-processes))))
 
+(defun android-create-project (path package activity)
+  "Create new Android project with SDK app"
+  (interactive "FPath: \nMPackage: \nMActivity: ")
+  (let* ((target (completing-read "Target: " (android-list-targets)))
+         (expanded-path (expand-file-name path))
+         (command (format "%s create project --path %S --package %s --activity %s --target %S"
+                          (android-tool-path "android")
+                          expanded-path package activity target))
+         (output (shell-command-to-string command)))
+    (if (string-equal "Error" (substring output 0 5))
+        (error output)
+      (find-file expanded-path))))
+
+(defun android-list-targets ()
+  "List Android SDKs installed on local machine."
+  (let* ((command (concat (android-tool-path "android") " list target"))
+         (output (shell-command-to-string command))
+         (result nil)
+         (offset 0))
+    (while (string-match "id: [[:digit:]]+ or \"\\(.*\\)\"" output offset)
+      (setq result (cons (match-string 1 output) result))
+      (setq offset (match-end 0)))
+    (if result
+        (reverse result)
+      (error "no Android Targets found"))))
 
                                         ; emulator
 
@@ -285,6 +310,51 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (switch-to-buffer android-logcat-buffer)
   (goto-char (point-max)))
 
+(defun android-project-package ()
+  "Return the package of the Android project"
+  (interactive)
+  (android-in-root
+   (let ((manifest "AndroidManifest.xml")
+         (buffer "*android-mode*/AndroidManifest.xml"))
+     (and (file-exists-p manifest)
+          (let ((buffer (get-buffer-create buffer)))
+            (with-current-buffer buffer
+              (erase-buffer)
+              (insert-file-contents manifest)
+              (goto-char (point-min))
+              (and (re-search-forward "package=\"\\(.*?\\)\"" nil t)
+                   (let ((package (match-string 1)))
+                     (kill-buffer buffer)
+                     package))))))))
+
+(defun android-launcher-activity ()
+  "Return the main launcher activity class name.
+
+The function grabs the first activity name as a first approximation."
+  (interactive)
+  (android-in-root
+   (let ((manifest "AndroidManifest.xml")
+         (buffer "*android-mode*/AndroidManifest.xml"))
+     (and (file-exists-p manifest)
+          (let ((buffer (get-buffer-create buffer)))
+            (with-current-buffer buffer
+              (erase-buffer)
+              (insert-file-contents manifest)
+              (goto-char (point-min))
+              (and (re-search-forward "android:name=\"\\(.*?\\)\"" nil t)
+                   (let ((activity-name (match-string 1)))
+                     (kill-buffer buffer)
+                     activity-name))))))))
+
+(defun android-start-app ()
+  "Start application on the device/emulator."
+  (interactive)
+  (let* ((command (concat (android-tool-path "adb") " shell am start -n "
+                          (android-project-package) "/"
+                          (android-launcher-activity)))
+         (output (shell-command-to-string command)))
+    (when (string-equal "Error" (substring output 0 5))
+      (error output))))
 
                                         ; ant
 
@@ -295,14 +365,16 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
    (compile (concat "ant " task))))
 
 (defmacro android-defun-ant-task (task)
-  `(defun ,(intern (concat "android-ant-" task)) ()
+  `(defun ,(intern (concat "android-ant-"
+                           (replace-regexp-in-string "[[:space:]]" "-" task)))
+     ()
      ,(concat "Run 'ant " task "' in the project root directory.")
      (interactive)
      (android-ant ,task)))
 
 (android-defun-ant-task "clean")
-(android-defun-ant-task "compile")
-(android-defun-ant-task "install")
+(android-defun-ant-task "debug")
+(android-defun-ant-task "installd")
 (android-defun-ant-task "uninstall")
 
 
@@ -313,10 +385,11 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     ("e" . android-start-emulator)
     ("l" . android-logcat)
     ("C" . android-ant-clean)
-    ("c" . android-ant-compile)
-    ("i" . android-ant-install)
+    ("c" . android-ant-debug)
+    ("i" . android-ant-installd)
     ("r" . android-ant-reinstall)
-    ("u" . android-ant-uninstall)))
+    ("u" . android-ant-uninstall)
+    ("a" . android-start-app)))
 
 (defvar android-mode-map (make-sparse-keymap))
 (add-hook 'android-mode-hook
