@@ -389,7 +389,6 @@ The function grabs the first activity name as a first approximation."
     ("i" . android-ant-installd)
     ("r" . android-ant-reinstall)
     ("u" . android-ant-uninstall)
-    ("N" . android-create-project)
     ("a" . android-start-app)))
 
 (defvar android-mode-map (make-sparse-keymap))
