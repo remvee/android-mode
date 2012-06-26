@@ -353,7 +353,7 @@ The function grabs the first activity name as a first approximation."
                           (android-project-package) "/"
                           (android-launcher-activity)))
          (output (shell-command-to-string command)))
-    (when (string-equal "Error" (substring output 0 5))
+    (when (string-match "^Error: " output)
       (error output))))
 
                                         ; ant
