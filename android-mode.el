@@ -1,12 +1,17 @@
 ;;; android-mode.el --- Minor mode for Android application development
 
-;; Copyright (C) 2009, 2010, 2011 R.W van 't Veer
+;; Copyright (C) 2009, 2010, 2011, 2012 R.W van 't Veer
 
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
 ;; Keywords: tools processes
 ;; Version: 0.1
 ;; URL: https://github.com/remvee/android-mode
+
+;; Contributors:
+;;   Bert Hartmann
+;;   Cristian Esquivias
+;;   Jürgen Hötzel
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -175,8 +180,6 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (reverse result)
       (error "no Android Targets found"))))
 
-                                        ; emulator
-
 (defun android-list-avd ()
   "List of Android Virtual Devices installed on local machine."
   (let* ((command (concat (android-tool-path "android") " list avd"))
@@ -187,7 +190,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
       (setq result (cons (match-string 1 output) result))
       (setq offset (match-end 0)))
     (if result
-      (reverse result)
+        (reverse result)
       (error "no Android Virtual Devices found"))))
 
 (defun android-start-emulator ()
@@ -199,17 +202,11 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                                              (concat (android-tool-path "emulator") " -avd " avd))
       (message (concat "emulator " avd " already running")))))
 
-
-                                        ; ddms
-
 (defun android-start-ddms ()
   "Launch Dalvik Debug Monitor Service tool."
   (interactive)
   (unless (android-start-exclusive-command "*android-ddms*" (android-tool-path "ddms"))
     (message "ddms already running")))
-
-
-                                        ; logcat
 
 (defcustom android-logcat-buffer "*android-logcat*"
   "Name for the buffer where logcat output goes."
@@ -242,19 +239,19 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
 
 (defun android-logcat-prepare-msg (msg)
   (if (string-match "\\bat \\(.+\\)\\.\\([^.]+\\)\\.\\([^.]+\\)(\\(.+\\):\\([0-9]+\\))" msg)
-    (let* ((package (match-string 1 msg))
-           (class (match-string 2 msg))
-           (method (match-string 3 msg))
-           (filename (concat (replace-regexp-in-string "\\." "/" package) "/" (match-string 4 msg)))
-           (linenr (match-string 5 msg)))
-      (if (file-exists-p (concat (android-root) "/src/" filename))
-        (propertize msg
-                    'face 'underline
-                    'mouse-face 'highlight
-                    'filename filename
-                    'linenr (string-to-number linenr)
-                    'follow-link t)
-        msg))
+      (let* ((package (match-string 1 msg))
+             (class (match-string 2 msg))
+             (method (match-string 3 msg))
+             (filename (concat (replace-regexp-in-string "\\." "/" package) "/" (match-string 4 msg)))
+             (linenr (match-string 5 msg)))
+        (if (file-exists-p (concat (android-root) "/src/" filename))
+            (propertize msg
+                        'face 'underline
+                        'mouse-face 'highlight
+                        'filename filename
+                        'linenr (string-to-number linenr)
+                        'follow-link t)
+          msg))
     msg))
 
 (defvar android-logcat-pending-output "")
@@ -273,20 +270,20 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
             (setq pos (match-end 0))
             (goto-char (point-max))
             (if (string-match "^\\(.\\)/\\(.*\\)( *\\([0-9]+\\)): \\(.*\\)$" line)
-              (let* ((level (match-string 1 line))
-                     (level-face (or (cdr (assoc level android-mode-log-face-alist)) android-mode-info-face))
-                     (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
-                     (pid (match-string 3 line))
-                     (msg (match-string 4 line)))
-                (insert (propertize level
-                                    'font-lock-face level-face))
-                (tab-to-tab-stop)
-                (insert (propertize tag
-                                    'font-lock-face 'font-lock-function-name-face))
-                (insert (propertize (concat "("  pid ")")
-                                    'font-lock-face 'font-lock-constant-face))
-                (tab-to-tab-stop)
-                (insert (android-logcat-prepare-msg (propertize msg 'font-lock-face level-face))))
+                (let* ((level (match-string 1 line))
+                       (level-face (or (cdr (assoc level android-mode-log-face-alist)) android-mode-info-face))
+                       (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
+                       (pid (match-string 3 line))
+                       (msg (match-string 4 line)))
+                  (insert (propertize level
+                                      'font-lock-face level-face))
+                  (tab-to-tab-stop)
+                  (insert (propertize tag
+                                      'font-lock-face 'font-lock-function-name-face))
+                  (insert (propertize (concat "("  pid ")")
+                                      'font-lock-face 'font-lock-constant-face))
+                  (tab-to-tab-stop)
+                  (insert (android-logcat-prepare-msg (propertize msg 'font-lock-face level-face))))
               (insert (propertize line
                                   'font-lock-face 'font-lock-warning-face)))
             (insert "\n")))
@@ -356,8 +353,6 @@ The function grabs the first activity name as a first approximation."
     (when (string-match "^Error: " output)
       (error output))))
 
-                                        ; ant
-
 (defun android-ant (task)
   "Run ant TASK in the project root directory."
   (interactive "sTask: ")
@@ -376,9 +371,6 @@ The function grabs the first activity name as a first approximation."
 (android-defun-ant-task "debug")
 (android-defun-ant-task "installd")
 (android-defun-ant-task "uninstall")
-
-
-                                        ; mode
 
 (defconst android-mode-keys
   '(("d" . android-start-ddms)

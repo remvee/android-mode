@@ -3,7 +3,7 @@ android-mode.el -- Minor mode for Android application development
 Provides support for running Android SDK subprocesses like the
 emulator, logcat, ddms and ant.
 
-Copyright (C) 2009 R.W van 't Veer
+Copyright (C) 2009, 2010, 2011, 2012 R.W van 't Veer
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
