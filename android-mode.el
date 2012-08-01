@@ -326,36 +326,55 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                      (kill-buffer buffer)
                      package))))))))
 
-(defun android-launcher-activity ()
-  "Return the main launcher activity class name.
-
-The function grabs the first activity name."
-  (interactive)
+(defun android-list-project-launcher-activity-names ()
+  "Return list of launcher activity class names as found in the
+manifest.  The names returned are fully qualified class names.
+Names starting with a period or a capital letter are prepended by
+the project package name."
   (android-in-root
    (let ((manifest "AndroidManifest.xml")
-         (buffer "*android-mode*/AndroidManifest.xml"))
-     (and (file-exists-p manifest)
-          (let ((buffer (get-buffer-create buffer)))
-            (with-current-buffer buffer
-              (erase-buffer)
-              (insert-file-contents manifest)
-              (goto-char (point-min))
-              (and (goto-char (search-forward "android.intent.category.LAUNCHER"))
-                   (goto-char (search-backward "<activity"))
-                   (re-search-forward "android:name[ ]*=[ ]*\"\\(.*?\\)\"" nil t)
-                   (let ((activity-name (match-string 1)))
-                     (kill-buffer buffer)
-                     activity-name))))))))
+         (buffer "z*android-mode*/AndroidManifest.xml")
+         (names nil))
+     (when (file-exists-p manifest)
+       (let* ((buffer (get-buffer-create buffer))
+              (package (android-project-package))
+              (anything-regex "\\(?:.\\|\n\\)*?")
+              (activity-regex (concat "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\""
+                                      anything-regex
+                                      "<category[^>]* android:name=\"android.intent.category.LAUNCHER\""
+                                      anything-regex
+                                      "</activity>")))
+         (with-current-buffer buffer
+           (erase-buffer)
+           (insert-file-contents manifest)
+           (goto-char (point-min))
+           (while (setq pos (re-search-forward activity-regex nil t))
+             (let* ((case-fold-search nil)
+                    (name (match-string 1))
+                    (name (cond ((string-match "^\\." name)
+                                 (concat package name))
+                                ((string-match "^[A-Z]" name)
+                                 (concat package "." name))
+                                (t name))))
+               (setq names (cons name names)))
+             (goto-char (1+ pos)))
+           (kill-buffer buffer))))
+     (reverse names))))
 
 (defun android-start-app ()
   "Start application on the device/emulator."
   (interactive)
-  (let* ((command (concat (android-tool-path "adb") " shell am start -n "
-                          (android-project-package) "/."
-                          (android-launcher-activity)))
-         (output (shell-command-to-string command)))
-    (when (string-match "^Error: " output)
-      (error output))))
+  (let* ((package (android-project-package))
+         (activity (car (android-list-project-launcher-activity-names)))
+         (name (concat package "/" activity))
+         (command (concat (android-tool-path "adb")
+                          " shell am start -n "
+                          name)))
+    (unless activity (error "no launcher activity found in manifest"))
+    (message "Launching activity: %s" name)
+    (let ((output (shell-command-to-string command)))
+      (when (string-match "^Error: " output)
+        (error (concat "failed to lauch\n" command "\n" output))))))
 
 (defun android-ant (task)
   "Run ant TASK in the project root directory."
