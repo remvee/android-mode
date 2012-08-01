@@ -360,7 +360,7 @@ The function grabs the first activity name."
   "Run ant TASK in the project root directory."
   (interactive "sTask: ")
   (android-in-root
-   (compile (concat "ant " task))))
+   (compile (concat "ant -e " task))))
 
 (defmacro android-defun-ant-task (task)
   `(defun ,(intern (concat "android-ant-"
