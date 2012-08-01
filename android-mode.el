@@ -114,18 +114,14 @@ referred directory does not exist, return `android-mode-sdk-dir'
 variable."
   (or
    (android-in-root
-    (let ((local-properties "local.properties")
-          (buffer "*android-mode*/local.properties"))
+    (let ((local-properties "local.properties"))
       (and (file-exists-p local-properties)
-           (let ((buffer (get-buffer-create buffer)))
-             (with-current-buffer buffer
-               (erase-buffer)
-               (insert-file-contents local-properties)
-               (goto-char (point-min))
-               (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
-                    (let ((sdk-dir (match-string 1)))
-                      (kill-buffer buffer)
-                      (and (file-exists-p sdk-dir) sdk-dir))))))))
+           (with-temp-buffer
+             (insert-file-contents local-properties)
+             (goto-char (point-min))
+             (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
+                  (let ((sdk-dir (match-string 1)))
+                    (and (file-exists-p sdk-dir) sdk-dir)))))))
    android-mode-sdk-dir))
 
 (defun android-tool-path (name)
@@ -314,18 +310,13 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   "Return the package of the Android project"
   (interactive)
   (android-in-root
-   (let ((manifest "AndroidManifest.xml")
-         (buffer "*android-mode*/package/AndroidManifest.xml"))
+   (let ((manifest "AndroidManifest.xml"))
      (and (file-exists-p manifest)
-          (let ((buffer (get-buffer-create buffer)))
-            (with-current-buffer buffer
-              (erase-buffer)
-              (insert-file-contents manifest)
-              (goto-char (point-min))
-              (and (re-search-forward "package=\"\\(.*?\\)\"" nil t)
-                   (let ((package (match-string 1)))
-                     (kill-buffer buffer)
-                     package))))))))
+          (with-temp-buffer
+            (insert-file-contents manifest)
+            (goto-char (point-min))
+            (and (re-search-forward "package=\"\\(.*?\\)\"" nil t)
+                 (match-string 1)))))))
 
 (defun android-current-buffer-class-name ()
   "Try to determine the full qualified class name defined in the
@@ -348,11 +339,9 @@ Names starting with a period or a capital letter are prepended by
 the project package name."
   (android-in-root
    (let ((manifest "AndroidManifest.xml")
-         (buffer "*android-mode*/activities/AndroidManifest.xml")
          (names nil))
      (when (file-exists-p manifest)
-       (let* ((buffer (get-buffer-create buffer))
-              (package (android-project-package))
+       (let* ((package (android-project-package))
               (anything-regex "\\(?:.\\|\n\\)*?")
               (activity-regex (concat "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\""
                                       anything-regex
@@ -360,8 +349,7 @@ the project package name."
                                       anything-regex
                                       "</activity>"))
               (pos (point-min)))
-         (with-current-buffer buffer
-           (erase-buffer)
+         (with-temp-buffer
            (insert-file-contents manifest)
            (goto-char pos)
            (while (setq pos (re-search-forward activity-regex nil t))
@@ -373,8 +361,7 @@ the project package name."
                                  (concat package "." name))
                                 (t name))))
                (setq names (cons name names)))
-             (goto-char (1+ pos)))
-           (kill-buffer buffer))))
+             (goto-char (1+ pos))))))
      (reverse names))))
 
 (defun android-start-app ()
