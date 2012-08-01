@@ -315,7 +315,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (interactive)
   (android-in-root
    (let ((manifest "AndroidManifest.xml")
-         (buffer "*android-mode*/AndroidManifest.xml"))
+         (buffer "*android-mode*/package/AndroidManifest.xml"))
      (and (file-exists-p manifest)
           (let ((buffer (get-buffer-create buffer)))
             (with-current-buffer buffer
@@ -327,14 +327,28 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                      (kill-buffer buffer)
                      package))))))))
 
-(defun android-list-project-launcher-activity-names ()
-  "Return list of launcher activity class names as found in the
+(defun android-current-buffer-class-name ()
+  "Try to determine the full qualified class name defined in the
+current buffer."
+  (save-excursion
+    (cond ((string-match "\\.java$" buffer-file-name)
+           (goto-char (point-min))
+           (let* ((case-fold-search nil)
+                  (package (and (search-forward-regexp "^[ \t]*package[ \t]+\\([a-z0-9_.]+\\)" nil t)
+                                     (match-string-no-properties 1)))
+                  (class (and (search-forward-regexp "\\bpublic[ \t]+class[ \t]+\\([A-Za-z0-9]+\\)" nil t)
+                                   (match-string-no-properties 1))))
+             (cond ((and package class) (concat package "." class))
+                   (class class)))))))
+
+(defun android-list-project-main-activities ()
+  "Return list of main activity class names as found in the
 manifest.  The names returned are fully qualified class names.
 Names starting with a period or a capital letter are prepended by
 the project package name."
   (android-in-root
    (let ((manifest "AndroidManifest.xml")
-         (buffer "z*android-mode*/AndroidManifest.xml")
+         (buffer "*android-mode*/activities/AndroidManifest.xml")
          (names nil))
      (when (file-exists-p manifest)
        (let* ((buffer (get-buffer-create buffer))
@@ -342,13 +356,14 @@ the project package name."
               (anything-regex "\\(?:.\\|\n\\)*?")
               (activity-regex (concat "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\""
                                       anything-regex
-                                      "<category[^>]* android:name=\"android.intent.category.LAUNCHER\""
+                                      "<action[^>]* android:name=\"android.intent.action.MAIN\""
                                       anything-regex
-                                      "</activity>")))
+                                      "</activity>"))
+              (pos (point-min)))
          (with-current-buffer buffer
            (erase-buffer)
            (insert-file-contents manifest)
-           (goto-char (point-min))
+           (goto-char pos)
            (while (setq pos (re-search-forward activity-regex nil t))
              (let* ((case-fold-search nil)
                     (name (match-string 1))
@@ -363,19 +378,25 @@ the project package name."
      (reverse names))))
 
 (defun android-start-app ()
-  "Start application on the device/emulator."
+  "Start activity in the running emulator.  When the current
+buffer holds an activity class specified in the manifest as a
+main action intent is will be run.  Otherwise start the first one
+listed."
   (interactive)
   (let* ((package (android-project-package))
-         (activity (car (android-list-project-launcher-activity-names)))
-         (name (concat package "/" activity))
+         (current (android-current-buffer-class-name))
+         (activities (android-list-project-main-activities))
+         (activity (if (member current activities)
+                       current
+                     (car activities)))
          (command (concat (android-tool-path "adb")
                           " shell am start -n "
-                          name)))
-    (unless activity (error "no launcher activity found in manifest"))
-    (message "Launching activity: %s" name)
+                          (concat package "/" activity))))
+    (unless activity (error "no main activity found in manifest"))
+    (message "Starting activity: %s" activity)
     (let ((output (shell-command-to-string command)))
       (when (string-match "^Error: " output)
-        (error (concat "failed to lauch\n" command "\n" output))))))
+        (error (concat command "\n" output))))))
 
 (defun android-ant (task)
   "Run ant TASK in the project root directory."
