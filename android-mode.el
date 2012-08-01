@@ -220,7 +220,8 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (linenr (get-text-property (point) 'linenr)))
     (when filename
       (find-file (concat (android-root) "/src/" filename))
-      (goto-line linenr))))
+      (goto-char (point-min))
+      (forward-line (1- linenr)))))
 
 (defun android-logcat-find-file-mouse (event)
   (interactive "e")
