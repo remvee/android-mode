@@ -332,50 +332,56 @@ current buffer."
              (cond ((and package class) (concat package "." class))
                    (class class)))))))
 
-(defun android-list-project-main-activities ()
+(defconst android-manifest-activity-re
+  "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\"\\(?:.\\|\n\\)*?</activity>")
+(defconst android-manifest-action-re
+  "<action[^>]* android:name=\"android.intent.action.MAIN\"")
+(defconst android-manifest-category-re
+  "<category[^>]* android:name=\"android.intent.category.")
+
+(defun android-list-project-main-activities (&optional category)
   "Return list of main activity class names as found in the
 manifest.  The names returned are fully qualified class names.
 Names starting with a period or a capital letter are prepended by
-the project package name."
-  (android-in-root
-   (let ((manifest "AndroidManifest.xml")
-         (names nil))
+the project package name.
+
+Filter on CATEGORY name when supplied."
+  (let ((manifest "AndroidManifest.xml"))
+    (android-in-root
      (when (file-exists-p manifest)
-       (let* ((package (android-project-package))
-              (anything-regex "\\(?:.\\|\n\\)*?")
-              (activity-regex (concat "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\""
-                                      anything-regex
-                                      "<action[^>]* android:name=\"android.intent.action.MAIN\""
-                                      anything-regex
-                                      "</activity>"))
-              (pos (point-min)))
+       (let ((package (android-project-package))
+             (names nil))
          (with-temp-buffer
            (insert-file-contents manifest)
-           (goto-char pos)
-           (while (setq pos (re-search-forward activity-regex nil t))
-             (let* ((case-fold-search nil)
-                    (name (match-string 1))
-                    (name (cond ((string-match "^\\." name)
-                                 (concat package name))
-                                ((string-match "^[A-Z]" name)
-                                 (concat package "." name))
-                                (t name))))
-               (setq names (cons name names)))
-             (goto-char (1+ pos))))))
-     (reverse names))))
+           (goto-char (point-min))
+           (while (re-search-forward android-manifest-activity-re nil t)
+             (let ((case-fold-search nil)
+                   (activity (match-string 0))
+                   (name (match-string 1)))
+               (when (and (string-match android-manifest-action-re activity)
+                          (or (not category)
+                              (string-match (concat android-manifest-category-re category "\"")
+                                            activity)))
+                 (let ((name (cond ((string-match "^\\." name)
+                                    (concat package name))
+                                   ((string-match "^[A-Z]" name)
+                                    (concat package "." name))
+                                   (t name))))
+                   (setq names (cons name names))))))
+           (reverse names)))))))
 
 (defun android-start-app ()
   "Start activity in the running emulator.  When the current
 buffer holds an activity class specified in the manifest as a
-main action intent is will be run.  Otherwise start the first one
-listed."
+main action intent is will be run.  Otherwise start the first
+activity in the 'launcher' category."
   (interactive)
   (let* ((package (android-project-package))
          (current (android-current-buffer-class-name))
-         (activities (android-list-project-main-activities))
-         (activity (if (member current activities)
+         (activity (if (member current
+                               (android-list-project-main-activities))
                        current
-                     (car activities)))
+                     (car (android-list-project-main-activities "LAUNCHER"))))
          (command (concat (android-tool-path "adb")
                           " shell am start -n "
                           (concat package "/" activity))))
