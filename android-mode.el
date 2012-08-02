@@ -306,18 +306,6 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (switch-to-buffer android-logcat-buffer)
   (goto-char (point-max)))
 
-(defun android-project-package ()
-  "Return the package of the Android project"
-  (interactive)
-  (android-in-root
-   (let ((manifest "AndroidManifest.xml"))
-     (and (file-exists-p manifest)
-          (with-temp-buffer
-            (insert-file-contents manifest)
-            (goto-char (point-min))
-            (and (re-search-forward "package=\"\\(.*?\\)\"" nil t)
-                 (match-string 1)))))))
-
 (defun android-current-buffer-class-name ()
   "Try to determine the full qualified class name defined in the
 current buffer."
@@ -332,43 +320,46 @@ current buffer."
              (cond ((and package class) (concat package "." class))
                    (class class)))))))
 
-(defconst android-manifest-activity-re
-  "<activity[^>]* android:name[ ]*=[ ]*\"\\(.*\\)\"\\(?:.\\|\n\\)*?</activity>")
-(defconst android-manifest-action-re
-  "<action[^>]* android:name=\"android.intent.action.MAIN\"")
-(defconst android-manifest-category-re
-  "<category[^>]* android:name=\"android.intent.category.")
+(defun android-project-package ()
+  "Return the package of the Android project"
+  (android-in-root
+   (let ((root (car (xml-parse-file "AndroidManifest.xml"))))
+     (xml-get-attribute root 'package))))
 
-(defun android-list-project-main-activities (&optional category)
+(defun android-project-main-activities (&optional category)
   "Return list of main activity class names as found in the
 manifest.  The names returned are fully qualified class names.
 Names starting with a period or a capital letter are prepended by
 the project package name.
 
-Filter on CATEGORY name when supplied."
-  (let ((manifest "AndroidManifest.xml"))
-    (android-in-root
-     (when (file-exists-p manifest)
-       (let ((package (android-project-package))
-             (names nil))
-         (with-temp-buffer
-           (insert-file-contents manifest)
-           (goto-char (point-min))
-           (while (re-search-forward android-manifest-activity-re nil t)
-             (let ((case-fold-search nil)
-                   (activity (match-string 0))
-                   (name (match-string 1)))
-               (when (and (string-match android-manifest-action-re activity)
-                          (or (not category)
-                              (string-match (concat android-manifest-category-re category "\"")
-                                            activity)))
-                 (let ((name (cond ((string-match "^\\." name)
-                                    (concat package name))
-                                   ((string-match "^[A-Z]" name)
-                                    (concat package "." name))
-                                   (t name))))
-                   (setq names (cons name names))))))
-           (reverse names)))))))
+Filter on CATEGORY intent when supplied."
+  (android-in-root
+   (flet ((first-xml-child (parent name)
+                           (car (xml-get-children parent name)))
+          (action-main-p (activity)
+                         (let ((el (first-xml-child (first-xml-child activity
+                                                                     'intent-filter)
+                                                'action)))
+                           (equal "android.intent.action.MAIN"
+                                  (xml-get-attribute el 'android:name))))
+          (category-p (activity)
+                      (let ((el (first-xml-child (first-xml-child activity
+                                                                  'intent-filter)
+                                                 'category)))
+                        (equal (concat "android.intent.category." category)
+                               (xml-get-attribute el 'android:name)))))
+     (let* ((root (car (xml-parse-file "AndroidManifest.xml")))
+            (package (xml-get-attribute root 'package))
+            (application (first-xml-child root 'application)))
+       (mapcar (lambda (activity)
+                 (let ((name (xml-get-attribute activity 'android:name)))
+                   (cond ((string-match "^\\." name)   (concat package name))
+                         ((string-match "^[A-Z]" name) (concat package "." name))
+                         (t name))))
+               (member-if (lambda (activity)
+                            (and (action-main-p activity)
+                                 (or (not category) (category-p activity))))
+                          (xml-get-children application 'activity)))))))
 
 (defun android-start-app ()
   "Start activity in the running emulator.  When the current
@@ -379,9 +370,9 @@ activity in the 'launcher' category."
   (let* ((package (android-project-package))
          (current (android-current-buffer-class-name))
          (activity (if (member current
-                               (android-list-project-main-activities))
+                               (android-project-main-activities))
                        current
-                     (car (android-list-project-main-activities "LAUNCHER"))))
+                     (car (android-project-main-activities "LAUNCHER"))))
          (command (concat (android-tool-path "adb")
                           " shell am start -n "
                           (concat package "/" activity))))
