@@ -103,8 +103,13 @@
   (locate-dominating-file default-directory "AndroidManifest.xml"))
 
 (defmacro android-in-root (body)
-  `(let ((default-directory (android-root)))
-     ,body))
+  "Execute BODY form with project root directory as
+``default-directory''.  The form is not executed when no project
+root directory can be found."
+  `(let ((android-root-dir (android-root)))
+     (when android-root-dir
+       (let ((default-directory android-root-dir))
+         ,body))))
 
 (defun android-local-sdk-dir ()
   "Try to find android sdk directory through the local.properties
