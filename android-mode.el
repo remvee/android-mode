@@ -238,6 +238,9 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") 'android-logcat-find-file)
     (define-key map [mouse-2] 'android-logcat-find-file-mouse)
+    (define-key map (kbd "n") 'next-logical-line)
+    (define-key map (kbd "p") 'previous-logical-line)
+    (define-key map (kbd "q") 'delete-window)
     map))
 
 (defun android-logcat-prepare-msg (msg)
