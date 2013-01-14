@@ -71,6 +71,12 @@
   :type 'string
   :group 'android-mode)
 
+(defcustom android-mode-search-query-format "https://www.google.com/search?q=%s&ie=UTF-8"
+  "A query format to search and know about a error message.
+Change this query to use your favorite search engine."
+  :type 'string
+  :group 'android-mode)
+
 (defface android-mode-verbose-face '((t (:foreground "DodgerBlue")))
   "Font Lock face used to highlight VERBOSE log records."
   :group 'android-mode)
@@ -300,6 +306,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
 (defvar android-logcat-compilation-error-regexp-alist
   '(("^\\(D\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 0 nil (4 'android-mode-debug-face))
     ("^\\(I\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 0 nil (4 'android-mode-info-face))
+    ("^\\(V\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 0 nil (4 'android-mode-verbose-face))
     ("^\\(W\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 1 nil (4 'android-mode-warning-face))
     ("^\\(E\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 2 nil (4 'android-mode-error-face))))
 
@@ -317,6 +324,27 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
       (use-local-map android-logcat-map)
       (set (make-local-variable 'compilation-message-face) '((t (:underline nil))))
       (set (make-local-variable 'compilation-error-regexp-alist) android-logcat-compilation-error-regexp-alist)
+      ;; This is pretty good enough to know about a next-error,
+      ;; although it's implement is dirty and not in compilation-minor-mode's general way.
+      ;; This modfied next-error-internal provides web search stuff using browse-url function
+      ;; with compilation-next-error--message as a keyword.
+      (defadvice next-error-internal (around around-next-error-internal)
+        (setq next-error-last-buffer (current-buffer))
+        (with-current-buffer next-error-last-buffer
+          (let ((logcat-next-error-message nil)
+                (logcat-search-query nil ))
+            (setq logcat-next-error-message
+                  (caar (elt (elt (substring
+                                   (compilation-next-error (or 0 1) nil
+                                                           (or compilation-current-error
+                                                               compilation-messages-start
+                                                               (point-min))) 1 2) 0) 2)))
+            (setq logcat-search-query
+                  (read-from-minibuffer "Web Search Keywords: " logcat-next-error-message))
+            (if (= (length logcat-search-query) 0)
+                (message "Quit")
+              (browse-url (format android-mode-search-query-format logcat-search-query))))))
+      (ad-activate 'next-error-internal)
       (compilation-minor-mode)
       (font-lock-mode t)
       (android-mode t)))
