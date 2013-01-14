@@ -297,6 +297,12 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (setq android-logcat-pending-output (substring output pos)))
       (when following (goto-char (point-max))))))
 
+(defvar android-logcat-compilation-error-regexp-alist
+  '(("^\\(D\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 0 nil (4 'android-mode-debug-face))
+    ("^\\(I\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 0 nil (4 'android-mode-info-face))
+    ("^\\(W\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 1 nil (4 'android-mode-warning-face))
+    ("^\\(E\\)\s\\(.+([0-9]+)\\)\\(\t\\|\s\\)+\\(.+\\)$" 4 nil nil 2 nil (4 'android-mode-error-face))))
+
 (defun android-logcat ()
   "Switch to ADB logcat buffer, create it when it doesn't exists yet."
   (interactive)
@@ -309,6 +315,9 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
       (setq buffer-read-only t)
       (set (make-local-variable 'tab-stop-list) '(2 30))
       (use-local-map android-logcat-map)
+      (set (make-local-variable 'compilation-message-face) '((t (:underline nil))))
+      (set (make-local-variable 'compilation-error-regexp-alist) android-logcat-compilation-error-regexp-alist)
+      (compilation-minor-mode)
       (font-lock-mode t)
       (android-mode t)))
   (switch-to-buffer android-logcat-buffer)
