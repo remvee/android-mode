@@ -405,6 +405,7 @@ activity in the 'launcher' category."
      (android-ant ,task)))
 
 (android-defun-ant-task "clean")
+(android-defun-ant-task "test")
 (android-defun-ant-task "debug")
 (android-defun-ant-task "installd")
 (android-defun-ant-task "uninstall")
@@ -414,6 +415,7 @@ activity in the 'launcher' category."
     ("e" . android-start-emulator)
     ("l" . android-logcat)
     ("C" . android-ant-clean)
+    ("t" . android-ant-test)
     ("c" . android-ant-debug)
     ("i" . android-ant-installd)
     ("r" . android-ant-reinstall)
