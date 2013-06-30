@@ -39,7 +39,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
@@ -132,7 +132,7 @@ variable."
 (defun android-tool-path (name)
   "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
 defined sdk directory. Defaults to `android-mode-sdk-dir'."
-  (or (find-if #'file-exists-p
+  (or (cl-find-if #'file-exists-p
                (apply #'append
                       (mapcar (lambda (path)
                                 (mapcar (lambda (ext)
@@ -146,7 +146,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
 
 (defvar android-exclusive-processes ())
 (defun android-start-exclusive-command (name command &rest args)
-  (and (not (find (intern name) android-exclusive-processes))
+  (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply 'start-process-shell-command name name command args)
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
@@ -342,7 +342,7 @@ the project package name.
 
 Filter on CATEGORY intent when supplied."
   (android-in-root
-   (flet ((first-xml-child (parent name)
+   (cl-flet ((first-xml-child (parent name)
                            (car (xml-get-children parent name)))
           (action-main-p (activity)
                          (let ((el (first-xml-child (first-xml-child activity
@@ -364,7 +364,7 @@ Filter on CATEGORY intent when supplied."
                    (cond ((string-match "^\\." name)   (concat package name))
                          ((string-match "^[A-Z]" name) (concat package "." name))
                          (t name))))
-               (member-if (lambda (activity)
+               (cl-member-if (lambda (activity)
                             (and (action-main-p activity)
                                  (or (not category) (category-p activity))))
                           (xml-get-children application 'activity)))))))
