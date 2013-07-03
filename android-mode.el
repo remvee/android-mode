@@ -39,7 +39,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
@@ -132,21 +132,21 @@ variable."
 (defun android-tool-path (name)
   "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
 defined sdk directory. Defaults to `android-mode-sdk-dir'."
-  (or (find-if #'file-exists-p
-               (apply #'append
-                      (mapcar (lambda (path)
-                                (mapcar (lambda (ext)
-                                          (mapconcat 'identity
-                                                     `(,(android-local-sdk-dir)
-                                                       ,path ,(concat name ext))
-                                                     "/"))
-                                        android-mode-sdk-tool-extensions))
-                              android-mode-sdk-tool-subdirs)))
+  (or (cl-find-if #'file-exists-p
+                  (apply #'append
+                         (mapcar (lambda (path)
+                                   (mapcar (lambda (ext)
+                                             (mapconcat 'identity
+                                                        `(,(android-local-sdk-dir)
+                                                          ,path ,(concat name ext))
+                                                        "/"))
+                                           android-mode-sdk-tool-extensions))
+                                 android-mode-sdk-tool-subdirs)))
       (error "can't find SDK tool: %s" name)))
 
 (defvar android-exclusive-processes ())
 (defun android-start-exclusive-command (name command &rest args)
-  (and (not (find (intern name) android-exclusive-processes))
+  (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply 'start-process-shell-command name name command args)
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
@@ -322,9 +322,9 @@ current buffer."
            (goto-char (point-min))
            (let* ((case-fold-search nil)
                   (package (and (search-forward-regexp "^[ \t]*package[ \t]+\\([a-z0-9_.]+\\)" nil t)
-                                     (match-string-no-properties 1)))
+                                (match-string-no-properties 1)))
                   (class (and (search-forward-regexp "\\bpublic[ \t]+class[ \t]+\\([A-Za-z0-9]+\\)" nil t)
-                                   (match-string-no-properties 1))))
+                              (match-string-no-properties 1))))
              (cond ((and package class) (concat package "." class))
                    (class class)))))))
 
@@ -342,20 +342,20 @@ the project package name.
 
 Filter on CATEGORY intent when supplied."
   (android-in-root
-   (flet ((first-xml-child (parent name)
-                           (car (xml-get-children parent name)))
-          (action-main-p (activity)
+   (cl-flet ((first-xml-child (parent name)
+                              (car (xml-get-children parent name)))
+             (action-main-p (activity)
+                            (let ((el (first-xml-child (first-xml-child activity
+                                                                        'intent-filter)
+                                                       'action)))
+                              (equal "android.intent.action.MAIN"
+                                     (xml-get-attribute el 'android:name))))
+             (category-p (activity)
                          (let ((el (first-xml-child (first-xml-child activity
                                                                      'intent-filter)
-                                                'action)))
-                           (equal "android.intent.action.MAIN"
-                                  (xml-get-attribute el 'android:name))))
-          (category-p (activity)
-                      (let ((el (first-xml-child (first-xml-child activity
-                                                                  'intent-filter)
-                                                 'category)))
-                        (equal (concat "android.intent.category." category)
-                               (xml-get-attribute el 'android:name)))))
+                                                    'category)))
+                           (equal (concat "android.intent.category." category)
+                                  (xml-get-attribute el 'android:name)))))
      (let* ((root (car (xml-parse-file "AndroidManifest.xml")))
             (package (xml-get-attribute root 'package))
             (application (first-xml-child root 'application)))
@@ -364,10 +364,10 @@ Filter on CATEGORY intent when supplied."
                    (cond ((string-match "^\\." name)   (concat package name))
                          ((string-match "^[A-Z]" name) (concat package "." name))
                          (t name))))
-               (member-if (lambda (activity)
-                            (and (action-main-p activity)
-                                 (or (not category) (category-p activity))))
-                          (xml-get-children application 'activity)))))))
+               (cl-member-if (lambda (activity)
+                               (and (action-main-p activity)
+                                    (or (not category) (category-p activity))))
+                             (xml-get-children application 'activity)))))))
 
 (defun android-start-app ()
   "Start activity in the running emulator.  When the current
