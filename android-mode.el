@@ -100,11 +100,11 @@
     ("W" . android-mode-warning-face)
     ("E" . android-mode-error-face)))
 
-(defun android-root ()
+(cl-defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
   (locate-dominating-file default-directory "AndroidManifest.xml"))
 
-(defmacro android-in-root (body)
+(cl-defmacro android-in-root (body)
   "Execute BODY form with project root directory as
 ``default-directory''.  The form is not executed when no project
 root directory can be found."
@@ -113,7 +113,7 @@ root directory can be found."
        (let ((default-directory android-root-dir))
          ,body))))
 
-(defun android-local-sdk-dir ()
+(cl-defun android-local-sdk-dir ()
   "Try to find android sdk directory through the local.properties
 file in the android project base directory.  If local.properties
 doesn't exist, it does not contain the sdk-dir property or the
@@ -131,13 +131,13 @@ variable."
                     (and (file-exists-p sdk-dir) sdk-dir)))))))
    android-mode-sdk-dir))
 
-(defun android-tool-path (name)
+(cl-defun android-tool-path (name)
   "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
 defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (or (cl-find-if #'file-exists-p
                   (apply #'append
-                         (mapcar (lambda (path)
-                                   (mapcar (lambda (ext)
+                         (cl-mapcar (lambda (path)
+                                   (cl-mapcar (lambda (ext)
                                              (mapconcat 'identity
                                                         `(,(android-local-sdk-dir)
                                                           ,path ,(concat name ext))
@@ -147,18 +147,18 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
       (error "can't find SDK tool: %s" name)))
 
 (defvar android-exclusive-processes ())
-(defun android-start-exclusive-command (name command &rest args)
+(cl-defun android-start-exclusive-command (name command &rest args)
   (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply 'start-process-shell-command name name command args)
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
                                  (setq android-exclusive-processes
-                                       (delete (intern (process-name proc))
+                                       (cl-delete (intern (process-name proc))
                                                android-exclusive-processes)))))
        (setq android-exclusive-processes (cons (intern name)
                                                android-exclusive-processes))))
 
-(defun android-create-project (path package activity)
+(cl-defun android-create-project (path package activity)
   "Create new Android project with SDK app"
   (interactive "FPath: \nMPackage: \nMActivity: ")
   (let* ((target (completing-read "Target: " (android-list-targets)))
@@ -171,7 +171,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (error output)
       (find-file expanded-path))))
 
-(defun android-list-targets ()
+(cl-defun android-list-targets ()
   "List Android SDKs installed on local machine."
   (let* ((command (concat (android-tool-path "android") " list target"))
          (output (shell-command-to-string command))
@@ -184,7 +184,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (reverse result)
       (error "no Android Targets found"))))
 
-(defun android-list-avd ()
+(cl-defun android-list-avd ()
   "List of Android Virtual Devices installed on local machine."
   (let* ((command (concat (android-tool-path "android") " list avd"))
          (output (shell-command-to-string command))
@@ -197,7 +197,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (reverse result)
       (error "no Android Virtual Devices found"))))
 
-(defun android-start-emulator ()
+(cl-defun android-start-emulator ()
   "Launch Android emulator."
   (interactive)
   (let ((avd (or (and (not (string= android-mode-avd "")) android-mode-avd)
@@ -206,7 +206,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                                              (concat (android-tool-path "emulator") " -avd " avd))
       (message (concat "emulator " avd " already running")))))
 
-(defun android-start-ddms ()
+(cl-defun android-start-ddms ()
   "Launch Dalvik Debug Monitor Service tool."
   (interactive)
   (unless (android-start-exclusive-command "*android-ddms*" (android-tool-path "ddms"))
@@ -217,7 +217,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   :type 'string
   :group 'android-mode)
 
-(defun android-logcat-find-file ()
+(cl-defun android-logcat-find-file ()
   (interactive)
   (let ((filename (get-text-property (point) 'filename))
         (linenr (get-text-property (point) 'linenr)))
@@ -226,7 +226,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
       (goto-char (point-min))
       (forward-line (1- linenr)))))
 
-(defun android-logcat-find-file-mouse (event)
+(cl-defun android-logcat-find-file-mouse (event)
   (interactive "e")
   (let (window pos file)
     (save-excursion
@@ -245,7 +245,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     (define-key map (kbd "q") 'delete-window)
     map))
 
-(defun android-logcat-prepare-msg (msg)
+(cl-defun android-logcat-prepare-msg (msg)
   (if (string-match "\\bat \\(.+\\)\\.\\([^.]+\\)\\.\\([^.]+\\)(\\(.+\\):\\([0-9]+\\))" msg)
       (let* ((package (match-string 1 msg))
              (class (match-string 2 msg))
@@ -264,7 +264,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
 
 (defvar android-logcat-pending-output "")
 
-(defun android-logcat-process-filter (process output)
+(cl-defun android-logcat-process-filter (process output)
   "Process filter for displaying logcat output."
   (with-current-buffer android-logcat-buffer
     (let ((following (= (point-max) (point)))
@@ -299,7 +299,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
         (setq android-logcat-pending-output (substring output pos)))
       (when following (goto-char (point-max))))))
 
-(defun android-logcat ()
+(cl-defun android-logcat ()
   "Switch to ADB logcat buffer, create it when it doesn't exists yet."
   (interactive)
   (when (android-start-exclusive-command android-logcat-buffer
@@ -316,7 +316,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   (switch-to-buffer android-logcat-buffer)
   (goto-char (point-max)))
 
-(defun android-current-buffer-class-name ()
+(cl-defun android-current-buffer-class-name ()
   "Try to determine the full qualified class name defined in the
 current buffer."
   (save-excursion
@@ -330,13 +330,13 @@ current buffer."
              (cond ((and package class) (concat package "." class))
                    (class class)))))))
 
-(defun android-project-package ()
+(cl-defun android-project-package ()
   "Return the package of the Android project"
   (android-in-root
    (let ((root (car (xml-parse-file "AndroidManifest.xml"))))
      (xml-get-attribute root 'package))))
 
-(defun android-project-main-activities (&optional category)
+(cl-defun android-project-main-activities (&optional category)
   "Return list of main activity class names as found in the
 manifest.  The names returned are fully qualified class names.
 Names starting with a period or a capital letter are prepended by
@@ -361,7 +361,7 @@ Filter on CATEGORY intent when supplied."
      (let* ((root (car (xml-parse-file "AndroidManifest.xml")))
             (package (xml-get-attribute root 'package))
             (application (first-xml-child root 'application)))
-       (mapcar (lambda (activity)
+       (cl-mapcar (lambda (activity)
                  (let ((name (xml-get-attribute activity 'android:name)))
                    (cond ((string-match "^\\." name)   (concat package name))
                          ((string-match "^[A-Z]" name) (concat package "." name))
@@ -371,7 +371,7 @@ Filter on CATEGORY intent when supplied."
                                     (or (not category) (category-p activity))))
                              (xml-get-children application 'activity)))))))
 
-(defun android-start-app ()
+(cl-defun android-start-app ()
   "Start activity in the running emulator.  When the current
 buffer holds an activity class specified in the manifest as a
 main action intent is will be run.  Otherwise start the first
@@ -392,14 +392,14 @@ activity in the 'launcher' category."
       (when (string-match "^Error: " output)
         (error (concat command "\n" output))))))
 
-(defun android-ant (task)
+(cl-defun android-ant (task)
   "Run ant TASK in the project root directory."
   (interactive "sTask: ")
   (android-in-root
    (compile (concat "ant -e " task))))
 
-(defmacro android-defun-ant-task (task)
-  `(defun ,(intern (concat "android-ant-"
+(cl-defmacro android-defun-ant-task (task)
+  `(cl-defun ,(intern (concat "android-ant-"
                            (replace-regexp-in-string "[[:space:]]" "-" task)))
      ()
      ,(concat "Run 'ant " task "' in the project root directory.")
@@ -427,7 +427,7 @@ activity in the 'launcher' category."
 (defvar android-mode-map (make-sparse-keymap))
 (add-hook 'android-mode-hook
           (lambda ()
-            (dolist (spec android-mode-keys)
+            (cl-dolist (spec android-mode-keys)
               (define-key
                 android-mode-map
                 (read-kbd-macro (concat android-mode-key-prefix " " (car spec)))
