@@ -5,7 +5,7 @@
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
 ;; Keywords: tools processes
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; URL: https://github.com/remvee/android-mode
 
 ;; Contributors:
@@ -344,20 +344,20 @@ the project package name.
 
 Filter on CATEGORY intent when supplied."
   (android-in-root
-   (cl-flet ((first-xml-child (parent name)
-                              (car (xml-get-children parent name)))
-             (action-main-p (activity)
-                            (let ((el (first-xml-child (first-xml-child activity
-                                                                        'intent-filter)
-                                                       'action)))
-                              (equal "android.intent.action.MAIN"
-                                     (xml-get-attribute el 'android:name))))
-             (category-p (activity)
-                         (let ((el (first-xml-child (first-xml-child activity
-                                                                     'intent-filter)
-                                                    'category)))
-                           (equal (concat "android.intent.category." category)
-                                  (xml-get-attribute el 'android:name)))))
+   (cl-flet* ((first-xml-child (parent name)
+                               (car (xml-get-children parent name)))
+              (action-main-p (activity)
+                             (let ((el (first-xml-child (first-xml-child activity
+                                                                         'intent-filter)
+                                                        'action)))
+                               (equal "android.intent.action.MAIN"
+                                      (xml-get-attribute el 'android:name))))
+              (category-p (activity)
+                          (let ((el (first-xml-child (first-xml-child activity
+                                                                      'intent-filter)
+                                                     'category)))
+                            (equal (concat "android.intent.category." category)
+                                   (xml-get-attribute el 'android:name)))))
      (let* ((root (car (xml-parse-file "AndroidManifest.xml")))
             (package (xml-get-attribute root 'package))
             (application (first-xml-child root 'application)))
