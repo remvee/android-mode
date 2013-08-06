@@ -321,15 +321,16 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
   "Try to determine the full qualified class name defined in the
 current buffer."
   (save-excursion
-    (cond ((string-match "\\.java$" buffer-file-name)
-           (goto-char (point-min))
-           (let* ((case-fold-search nil)
-                  (package (and (search-forward-regexp "^[ \t]*package[ \t]+\\([a-z0-9_.]+\\)" nil t)
-                                (match-string-no-properties 1)))
-                  (class (and (search-forward-regexp "\\bpublic[ \t]+class[ \t]+\\([A-Za-z0-9]+\\)" nil t)
-                              (match-string-no-properties 1))))
-             (cond ((and package class) (concat package "." class))
-                   (class class)))))))
+    (when (and buffer-file-name
+               (string-match "\\.java$" buffer-file-name))
+      (goto-char (point-min))
+      (let* ((case-fold-search nil)
+             (package (and (search-forward-regexp "^[ \t]*package[ \t]+\\([a-z0-9_.]+\\)" nil t)
+                           (match-string-no-properties 1)))
+             (class (and (search-forward-regexp "\\bpublic[ \t]+class[ \t]+\\([A-Za-z0-9]+\\)" nil t)
+                         (match-string-no-properties 1))))
+        (cond ((and package class) (concat package "." class))
+              (class class))))))
 
 (defun android-project-package ()
   "Return the package of the Android project"
