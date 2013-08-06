@@ -15,6 +15,7 @@
 ;;   Jürgen Hötzel
 ;;   Karsten Gebbert
 ;;   Habibullah Pagarkar
+;;   Hiroo Matsumoto
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -362,7 +363,8 @@ Filter on CATEGORY intent when supplied."
             (package (xml-get-attribute root 'package))
             (application (first-xml-child root 'application)))
        (mapcar (lambda (activity)
-                 (let ((name (xml-get-attribute activity 'android:name)))
+                 (let ((case-fold-search nil)
+                       (name (xml-get-attribute activity 'android:name)))
                    (cond ((string-match "^\\." name)   (concat package name))
                          ((string-match "^[A-Z]" name) (concat package "." name))
                          (t name))))
