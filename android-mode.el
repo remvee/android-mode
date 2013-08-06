@@ -1,11 +1,11 @@
 ;;; android-mode.el --- Minor mode for Android application development
 
-;; Copyright (C) 2009-2012 R.W van 't Veer
+;; Copyright (C) 2009-2013 R.W van 't Veer
 
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
 ;; Keywords: tools processes
-;; Version: 0.2.3
+;; Version: 0.2.4
 ;; URL: https://github.com/remvee/android-mode
 
 ;; Contributors:
