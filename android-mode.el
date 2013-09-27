@@ -64,6 +64,20 @@
   :type '(repeat string)
   :group 'android-mode)
 
+(defcustom android-mode-builder 'ant
+  "Builder for building an android application."
+  :type 'string
+  :group 'android-mode)
+
+(defcustom android-mode-build-command-alist
+  '((ant . "ant -e")
+    (maven . "mvn"))
+  "Alist that specifies specific build command according to builder type.
+
+Each elt has the form (BUILDER COMMAND)."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'android-mode)
+
 (defcustom android-mode-key-prefix "\C-c \C-c"
   "Minor mode keys prefix."
   :type 'string
@@ -395,12 +409,19 @@ activity in the 'launcher' category."
       (when (string-match "^Error: " output)
         (error (concat command "\n" output))))))
 
-(defun android-ant (task)
-  "Run ant TASK in the project root directory."
-  (interactive "sTask: ")
-  (android-in-root
-   (compile (concat "ant -e " task))))
+(defmacro android-defun-builder (builder)
+  `(defun ,(intern (concat "android-" builder)) (tasks-or-goals)
+     ,(concat "Run " builder " TASKS-OR-GOALS in the project root directory.")
+     (interactive "sTasks or Goals: ")
+     (android-in-root
+      (compile (concat ,(cdr (assoc (intern builder) android-mode-build-command-alist))
+                       " " tasks-or-goals))))
+  )
 
+(android-defun-builder "ant")
+(android-defun-builder "maven")
+
+;; Ant
 (defmacro android-defun-ant-task (task)
   `(defun ,(intern (concat "android-ant-"
                            (replace-regexp-in-string "[[:space:]]" "-" task)))
@@ -415,16 +436,75 @@ activity in the 'launcher' category."
 (android-defun-ant-task "installd")
 (android-defun-ant-task "uninstall")
 
+;; Maven
+(defmacro android-defun-maven-task (task)
+  `(defun ,(intern (concat "android-maven-"
+                           (replace-regexp-in-string "[[:space:]:]" "-" task)))
+     ()
+     ,(concat "Run maven " task " in the project root directory.")
+     (interactive)
+     (android-maven ,task)))
+
+(android-defun-maven-task "clean")
+(android-defun-maven-task "test")
+(android-defun-maven-task "install")
+(android-defun-maven-task "android:deploy")
+(android-defun-maven-task "android:redeploy")
+(android-defun-maven-task "android:undeploy")
+
+;; Common build functions
+(defun android-build-clean ()
+  "Remove output files created by building."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-clean)
+             ('maven 'android-maven-clean))))
+
+(defun android-build-test ()
+  "Run the tests."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-test)
+             ('maven 'android-maven-test))))
+
+(defun android-build-debug ()
+  "Build the application in a debug mode."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-debug)
+             ('maven 'android-maven-install))))
+
+(defun android-build-install ()
+  "Install a generated apk file to the device."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-installd)
+             ('maven 'android-maven-android-deploy))))
+
+(defun android-build-reinstall ()
+  "Reinstall a generated apk file to the device."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-reinstall)
+             ('maven 'android-maven-android-redeploy))))
+
+(defun android-build-uninstall ()
+  "Uninstall a generated apk file from the device."
+  (interactive)
+  (funcall (case android-mode-builder
+             ('ant 'android-ant-uninstall)
+             ('maven 'android-maven-android-undeploy))))
+
 (defconst android-mode-keys
   '(("d" . android-start-ddms)
     ("e" . android-start-emulator)
     ("l" . android-logcat)
-    ("C" . android-ant-clean)
-    ("t" . android-ant-test)
-    ("c" . android-ant-debug)
-    ("i" . android-ant-installd)
-    ("r" . android-ant-reinstall)
-    ("u" . android-ant-uninstall)
+    ("C" . android-build-clean)
+    ("t" . android-build-test)
+    ("c" . android-build-debug)
+    ("i" . android-build-install)
+    ("r" . android-build-reinstall)
+    ("u" . android-build-uninstall)
     ("a" . android-start-app)))
 
 (defvar android-mode-map (make-sparse-keymap))
