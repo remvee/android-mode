@@ -464,36 +464,36 @@ activity in the 'launcher' category."
   "Run the tests."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-test)
-                  ('maven 'android-maven-test))))
+             ('ant 'android-ant-test)
+             ('maven 'android-maven-test))))
 
 (defun android-build-debug ()
   "Build the application in a debug mode."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-debug)
-                  ('maven 'android-maven-install))))
+             ('ant 'android-ant-debug)
+             ('maven 'android-maven-install))))
 
 (defun android-build-install ()
   "Install a generated apk file to the device."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-installd)
-                  ('maven 'android-maven-android-deploy))))
+             ('ant 'android-ant-installd)
+             ('maven 'android-maven-android-deploy))))
 
 (defun android-build-reinstall ()
   "Reinstall a generated apk file to the device."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-reinstall)
-                  ('maven 'android-maven-android-redeploy))))
+             ('ant 'android-ant-reinstall)
+             ('maven 'android-maven-android-redeploy))))
 
 (defun android-build-uninstall ()
   "Uninstall a generated apk file from the device."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-uninstall)
-                  ('maven 'android-maven-android-undeploy))))
+             ('ant 'android-ant-uninstall)
+             ('maven 'android-maven-android-undeploy))))
 
 (defconst android-mode-keys
   '(("d" . android-start-ddms)
