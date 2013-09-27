@@ -65,14 +65,14 @@
   :group 'android-mode)
 
 (defcustom android-mode-builder 'ant
-  "Command for application build"
+  "Builder for building an android application."
   :type 'string
   :group 'android-mode)
 
 (defcustom android-mode-build-command-alist
   '((ant . "ant -e")
     (maven . "mvn"))
-  "Alist that specifies specific build command according to builder type
+  "Alist that specifies specific build command according to builder type.
 
 Each elt has the form (BUILDER COMMAND)."
   :type '(alist :key-type symbol :value-type string)
@@ -454,36 +454,42 @@ activity in the 'launcher' category."
 
 ;; Common build functions
 (defun android-build-clean ()
+  "Remove output files created by building."
   (interactive)
   (funcall (case android-mode-builder
-                  ('ant 'android-ant-clean)
-                  ('maven 'android-maven-clean))))
+             ('ant 'android-ant-clean)
+             ('maven 'android-maven-clean))))
 
 (defun android-build-test ()
+  "Run the tests."
   (interactive)
   (funcall (case android-mode-builder
                   ('ant 'android-ant-test)
                   ('maven 'android-maven-test))))
 
 (defun android-build-debug ()
+  "Build the application in a debug mode."
   (interactive)
   (funcall (case android-mode-builder
                   ('ant 'android-ant-debug)
                   ('maven 'android-maven-install))))
 
 (defun android-build-install ()
+  "Install a generated apk file to the device."
   (interactive)
   (funcall (case android-mode-builder
                   ('ant 'android-ant-installd)
                   ('maven 'android-maven-android-deploy))))
 
 (defun android-build-reinstall ()
+  "Reinstall a generated apk file to the device."
   (interactive)
   (funcall (case android-mode-builder
                   ('ant 'android-ant-reinstall)
                   ('maven 'android-maven-android-redeploy))))
 
 (defun android-build-uninstall ()
+  "Uninstall a generated apk file from the device."
   (interactive)
   (funcall (case android-mode-builder
                   ('ant 'android-ant-uninstall)
