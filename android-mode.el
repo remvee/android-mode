@@ -42,7 +42,10 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
+(require 'xml)
+(eval-when-compile
+  (require 'cl))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
@@ -69,14 +72,15 @@
   :type 'string
   :group 'android-mode)
 
-(defcustom android-mode-build-command-alist
-  '((ant . "ant -e")
-    (maven . "mvn"))
-  "Alist that specifies specific build command according to builder type.
+(eval-and-compile
+  (defcustom android-mode-build-command-alist
+    '((ant . "ant -e")
+      (maven . "mvn"))
+    "Alist that specifies specific build command according to builder type.
 
 Each elt has the form (BUILDER COMMAND)."
-  :type '(alist :key-type symbol :value-type string)
-  :group 'android-mode)
+    :type '(alist :key-type symbol :value-type string)
+    :group 'android-mode))
 
 (defcustom android-mode-key-prefix "\C-c \C-c"
   "Minor mode keys prefix."
