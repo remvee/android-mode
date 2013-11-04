@@ -120,6 +120,12 @@ Each elt has the form (BUILDER COMMAND)."
     ("W" . android-mode-warning-face)
     ("E" . android-mode-error-face)))
 
+(defvar android-mode-log-filter-regexp ""
+  "With this, user can filter output in
+  `android-logcat-buffer'. If received line from logcat doesn't
+  match this, emacs will ignore that line. User can see their log
+  in a less verbose way.")
+
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
   (locate-dominating-file default-directory "AndroidManifest.xml"))
@@ -263,6 +269,8 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     (define-key map (kbd "n") 'next-logical-line)
     (define-key map (kbd "p") 'previous-logical-line)
     (define-key map (kbd "q") 'delete-window)
+    (define-key map (kbd "f") 'android-logcat-set-filter)
+    (define-key map (kbd "c") 'android-logcat-clear-filter)
     map))
 
 (defun android-logcat-prepare-msg (msg)
@@ -297,25 +305,26 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
           (let ((line (substring output pos (match-beginning 0))))
             (setq pos (match-end 0))
             (goto-char (point-max))
-            (if (string-match "^\\(.\\)/\\(.*\\)( *\\([0-9]+\\)): \\(.*\\)$" line)
-                (let* ((level (match-string 1 line))
-                       (level-face (cdr (or (assoc level android-mode-log-face-alist)
-                                            (assoc "I" android-mode-log-face-alist))))
-                       (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
-                       (pid (match-string 3 line))
-                       (msg (match-string 4 line)))
-                  (insert (propertize level
-                                      'font-lock-face level-face))
-                  (tab-to-tab-stop)
-                  (insert (propertize tag
-                                      'font-lock-face 'font-lock-function-name-face))
-                  (insert (propertize (concat "("  pid ")")
-                                      'font-lock-face 'font-lock-constant-face))
-                  (tab-to-tab-stop)
-                  (insert (android-logcat-prepare-msg (propertize msg 'font-lock-face level-face))))
-              (insert (propertize line
-                                  'font-lock-face 'font-lock-warning-face)))
-            (insert "\n")))
+            (when (string-match android-mode-log-filter-regexp line)
+              (if (string-match "^\\(.\\)/\\(.*\\)( *\\([0-9]+\\)): \\(.*\\)$" line)
+                  (let* ((level (match-string 1 line))
+                         (level-face (cdr (or (assoc level android-mode-log-face-alist)
+                                              (assoc "I" android-mode-log-face-alist))))
+                         (tag (replace-regexp-in-string " *$" "" (match-string 2 line)))
+                         (pid (match-string 3 line))
+                         (msg (match-string 4 line)))
+                    (insert (propertize level
+                                        'font-lock-face level-face))
+                    (tab-to-tab-stop)
+                    (insert (propertize tag
+                                        'font-lock-face 'font-lock-function-name-face))
+                    (insert (propertize (concat "("  pid ")")
+                                        'font-lock-face 'font-lock-constant-face))
+                    (tab-to-tab-stop)
+                    (insert (android-logcat-prepare-msg (propertize msg 'font-lock-face level-face))))
+                (insert (propertize line
+                                    'font-lock-face 'font-lock-warning-face)))
+              (insert "\n"))))
         (setq android-logcat-pending-output (substring output pos)))
       (when following (goto-char (point-max))))))
 
@@ -330,6 +339,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
     (with-current-buffer android-logcat-buffer
       (setq buffer-read-only t)
       (set (make-local-variable 'tab-stop-list) '(2 30))
+      (set (make-local-variable 'android-mode-log-filter-regexp) "")
       (use-local-map android-logcat-map)
       (font-lock-mode t)
       (android-mode t)))
@@ -413,6 +423,29 @@ activity in the 'launcher' category."
     (let ((output (shell-command-to-string command)))
       (when (string-match "^Error: " output)
         (error (concat command "\n" output))))))
+
+(defun android-logcat-set-filter (regexp-filter)
+  "Set the filter of `android-logcat-buffer' to
+REGEXP-FILTER. User can see only lines which match
+REGEXP-FILTER."
+  (interactive "MRegexp Filter: ")
+  (with-current-buffer android-logcat-buffer
+    (let ((buffer-read-only nil)
+          (info-face (cdr (assoc "I" android-mode-log-face-alist)))
+          msg)
+      (goto-char (point-max))
+      (if (equal (length regexp-filter) 0)
+          (setq msg "\n\n*** Filter is cleared ***\n\n")
+        (setq msg (concat "\n\n*** Filter is changed to '" regexp-filter
+                          "' ***\n\n")))
+      (insert (propertize msg 'font-lock-face info-face))))
+  (setq android-mode-log-filter-regexp regexp-filter))
+
+(defun android-logcat-clear-filter ()
+  "Clear the filter of `android-logcat-buffer'. User can see all
+logs"
+  (interactive)
+  (android-logcat-set-filter ""))
 
 (defmacro android-defun-builder (builder)
   `(defun ,(intern (concat "android-" builder)) (tasks-or-goals)
