@@ -299,7 +299,8 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
           (buffer-read-only nil)
           (pos 0)
           (output (concat android-logcat-pending-output
-                          (replace-regexp-in-string "" "" output))))
+                          (replace-regexp-in-string "
+" "" output))))
       (save-excursion
         (while (string-match "\n" output pos)
           (let ((line (substring output pos (match-beginning 0))))
@@ -417,7 +418,7 @@ activity in the 'launcher' category."
                      (car (android-project-main-activities "LAUNCHER"))))
          (command (concat (android-tool-path "adb")
                           " shell am start -n "
-                          (concat package "/" activity))))
+                          (concat package "/." activity))))
     (unless activity (error "no main activity found in manifest"))
     (message "Starting activity: %s" activity)
     (let ((output (shell-command-to-string command)))
