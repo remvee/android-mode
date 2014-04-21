@@ -522,9 +522,11 @@ logs"
 (defun android-build-reinstall ()
   "Reinstall a generated apk file to the device."
   (interactive)
-  (funcall (case android-mode-builder
-             ('ant 'android-ant-reinstall)
-             ('maven 'android-maven-android-redeploy))))
+  (cond ((eql android-mode-builder 'maven)
+           (android-maven-android-redeploy))
+        (t
+         (error "%s builder does not support reinstall"
+                android-mode-builder))))
 
 (defun android-build-uninstall ()
   "Uninstall a generated apk file from the device."
