@@ -76,7 +76,8 @@
 (eval-and-compile
   (defcustom android-mode-build-command-alist
     '((ant . "ant -e")
-      (maven . "mvn"))
+      (maven . "mvn")
+      (gradle . "./gradlew"))
     "Alist that specifies specific build command according to builder type.
 
 Each elt has the form (BUILDER COMMAND)."
@@ -458,6 +459,7 @@ logs"
 
 (android-defun-builder "ant")
 (android-defun-builder "maven")
+(android-defun-builder "gradle")
 
 ;; Ant
 (defmacro android-defun-ant-task (task)
@@ -489,6 +491,21 @@ logs"
 (android-defun-maven-task "android:deploy")
 (android-defun-maven-task "android:redeploy")
 (android-defun-maven-task "android:undeploy")
+
+(defmacro android-defun-gradle-task (task)
+  `(defun ,(intern (concat "android-gradle-"
+                           (replace-regexp-in-string "[[:space:]:]" "-" task)))
+       ()
+     ,(concat "Run gradle " task " in the project root directory.")
+     (interactive)
+     (android-gradle ,task)))
+
+(android-defun-gradle-task "clean")
+(android-defun-gradle-task "test")
+(android-defun-gradle-task "assembleDebug")
+(android-defun-gradle-task "assembleRelease")
+(android-defun-gradle-task "installDebug")
+(android-defun-gradle-task "uninstallDebug")
 
 ;; Common build functions
 (defun android-build-clean ()
