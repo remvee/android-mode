@@ -12,6 +12,7 @@
 ;;   Bert Hartmann
 ;;   Cristian Esquivias
 ;;   Donghyun Cho
+;;   Geoff Shannon
 ;;   Jürgen Hötzel
 ;;   Karsten Gebbert
 ;;   Habibullah Pagarkar
