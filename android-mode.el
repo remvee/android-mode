@@ -70,7 +70,8 @@
 
 (defcustom android-mode-builder 'ant
   "Builder for building an android application."
-  :type 'string
+  :type 'symbol
+  :options '(ant gradle maven)
   :group 'android-mode)
 
 (eval-and-compile
