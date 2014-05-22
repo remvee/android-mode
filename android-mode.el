@@ -513,6 +513,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-clean)
+             ('gradle 'anddroid-gradle-clean)
              ('maven 'android-maven-clean))))
 
 (defun android-build-test ()
@@ -520,6 +521,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-test)
+             ('gradle 'android-gradle-test)
              ('maven 'android-maven-test))))
 
 (defun android-build-debug ()
@@ -527,6 +529,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-debug)
+             ('gradle 'android-gradle-assembleDebug)
              ('maven 'android-maven-install))))
 
 (defun android-build-install ()
@@ -534,6 +537,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-installd)
+             ('gradle 'android-gradle-installDebug)
              ('maven 'android-maven-android-deploy))))
 
 (defun android-build-reinstall ()
@@ -549,6 +553,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-uninstall)
+             ('gradle 'android-gradle-uninstallDebug)
              ('maven 'android-maven-android-undeploy))))
 
 (defconst android-mode-keys
