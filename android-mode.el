@@ -74,6 +74,11 @@
   :options '(ant gradle maven)
   :group 'android-mode)
 
+(defcustom android-mode-root-file "AndroidManifest.xml"
+  "File that indicates the root of an Android project."
+  :type 'string
+  :group 'android-mode)
+
 (eval-and-compile
   (defcustom android-mode-build-command-alist
     '((ant . "ant -e")
@@ -130,7 +135,7 @@ Each elt has the form (BUILDER COMMAND)."
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
-  (locate-dominating-file default-directory "AndroidManifest.xml"))
+  (locate-dominating-file default-directory android-mode-root-file))
 
 (defmacro android-in-root (body)
   "Execute BODY form with project root directory as
