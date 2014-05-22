@@ -70,7 +70,10 @@
   :group 'android-mode)
 
 (defcustom android-mode-builder 'ant
-  "Builder for building an android application."
+  "Builder for building an android application.
+You may want to consider also modifying `android-mode-root-file'
+to a value that is appropriate for your build tool.  For
+instance, for the `gradle' builder I use \"build.gradle\"."
   :type 'symbol
   :options '(ant gradle maven)
   :group 'android-mode)
