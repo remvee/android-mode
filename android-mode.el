@@ -128,10 +128,10 @@ Each elt has the form (BUILDER COMMAND)."
     ("E" . android-mode-error-face)))
 
 (defvar android-mode-log-filter-regexp ""
-  "With this, user can filter output in
-  `android-logcat-buffer'. If received line from logcat doesn't
-  match this, emacs will ignore that line. User can see their log
-  in a less verbose way.")
+  "With this, user can filter output in `android-logcat-buffer'.
+If received line from logcat doesn't match this, Emacs will
+ignore that line.  User can see their log in a less verbose
+way.")
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
@@ -165,8 +165,9 @@ variable."
    android-mode-sdk-dir))
 
 (defun android-tool-path (name)
-  "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
-defined sdk directory. Defaults to `android-mode-sdk-dir'."
+  "Find path to SDK tool.
+Calls `android-local-sdk-dir' to try to find locally defined sdk
+directory.  Defaults to `android-mode-sdk-dir'."
   (or (cl-find-if #'file-exists-p
                   (apply #'append
                          (mapcar (lambda (path)
@@ -192,7 +193,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                                                android-exclusive-processes))))
 
 (defun android-create-project (path package activity)
-  "Create new Android project with SDK app"
+  "Create new Android project with SDK app."
   (interactive "FPath: \nMPackage: \nMActivity: ")
   (let* ((target (completing-read "Target: " (android-list-targets)))
          (expanded-path (expand-file-name path))
