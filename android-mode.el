@@ -74,9 +74,9 @@
 
 (defcustom android-mode-builder 'ant
   "Builder for building an android application.
-You may want to consider also modifying `android-mode-root-file'
-to a value that is appropriate for your build tool.  For
-instance, for the `gradle' builder I use \"build.gradle\"."
+When customizing `android-mode-builder' it's important to make
+sure that a corresponding entry exists in
+`android-mode-root-file-plist'."
   :type 'symbol
   :options android-mode-default-builders
   :group 'android-mode)
