@@ -49,6 +49,9 @@
 (eval-when-compile
   (require 'cl))
 
+(defvar android-mode-default-builders
+  '(ant gradle maven))
+
 (defgroup android-mode nil
   "A minor mode for Android application development"
   :prefix "android-mode-"
@@ -75,7 +78,7 @@ You may want to consider also modifying `android-mode-root-file'
 to a value that is appropriate for your build tool.  For
 instance, for the `gradle' builder I use \"build.gradle\"."
   :type 'symbol
-  :options '(ant gradle maven)
+  :options android-mode-default-builders
   :group 'android-mode)
 
 (defcustom android-mode-root-file "AndroidManifest.xml"
@@ -92,6 +95,7 @@ instance, for the `gradle' builder I use \"build.gradle\"."
 
 Each elt has the form (BUILDER COMMAND)."
     :type '(alist :key-type symbol :value-type string)
+    :options android-mode-default-builders
     :group 'android-mode))
 
 (defcustom android-mode-key-prefix "\C-c \C-c"
