@@ -148,12 +148,13 @@ way.")
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
-  (locate-dominating-file
-   default-directory
-   (or (plist-get android-mode-root-file-plist
-                  android-mode-builder)
-       (error "%s was not found in `android-mode-root-file-plist'"
-              android-mode-builder))))
+  (let ((dominating-file (plist-get android-mode-root-file-plist
+                                    android-mode-builder)))
+    (if dominating-file
+        (locate-dominating-file default-directory dominating-file)
+      (message "%s was not found in `android-mode-root-file-plist'"
+               android-mode-builder)
+      nil)))
 
 (defmacro android-in-root (body)
   "Execute BODY form with project root directory as
