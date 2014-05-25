@@ -81,9 +81,14 @@ instance, for the `gradle' builder I use \"build.gradle\"."
   :options android-mode-default-builders
   :group 'android-mode)
 
-(defcustom android-mode-root-file "AndroidManifest.xml"
-  "File that indicates the root of an Android project."
-  :type 'string
+(defcustom android-mode-root-file-plist '((ant . "AndroidManifest.xml")
+                                          (maven . "AndroidManifest.xml")
+                                          (gradle . "build.gradle"))
+  "Plist of mapping between different builders and the file that
+  signifies the root of a project that uses that builder."
+  :type '(plist :key-type symbol
+                :value-type string)
+  :options android-mode-default-builders
   :group 'android-mode)
 
 (eval-and-compile
@@ -143,7 +148,9 @@ way.")
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
-  (locate-dominating-file default-directory android-mode-root-file))
+  (locate-dominating-file default-directory
+                          (plist-get android-mode-root-file-plist
+                                     android-mode-builder)))
 
 (defmacro android-in-root (body)
   "Execute BODY form with project root directory as
