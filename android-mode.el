@@ -81,9 +81,9 @@ sure that a corresponding entry exists in
   :options android-mode-default-builders
   :group 'android-mode)
 
-(defcustom android-mode-root-file-plist '((ant . "AndroidManifest.xml")
-                                          (maven . "AndroidManifest.xml")
-                                          (gradle . "build.gradle"))
+(defcustom android-mode-root-file-plist '(ant "AndroidManifest.xml"
+                                          maven  "AndroidManifest.xml"
+                                          gradle "build.gradle")
   "Plist of mapping between different builders and the file that
   signifies the root of a project that uses that builder."
   :type '(plist :key-type symbol
