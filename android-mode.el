@@ -539,7 +539,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-clean)
-             ('gradle 'anddroid-gradle-clean)
+             ('gradle 'android-gradle-clean)
              ('maven 'android-maven-clean))))
 
 (defun android-build-test ()
