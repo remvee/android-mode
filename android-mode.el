@@ -17,6 +17,7 @@
 ;;   Habibullah Pagarkar
 ;;   Hiroo Matsumoto
 ;;   K. Adam Christensen
+;;   Haden Pike
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -53,7 +54,8 @@
   :prefix "android-mode-"
   :group 'applications)
 
-(defcustom android-mode-sdk-dir "~/Android/sdk"
+(defcustom android-mode-sdk-dir
+  (or (getenv "ANDROID_HOME") "~/Android/sdk")
   "Set to the directory containing the Android SDK."
   :type 'string
   :group 'android-mode)
