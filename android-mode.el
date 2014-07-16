@@ -12,6 +12,7 @@
 ;;   Bert Hartmann
 ;;   Cristian Esquivias
 ;;   Donghyun Cho
+;;   Geoff Shannon
 ;;   Jürgen Hötzel
 ;;   Karsten Gebbert
 ;;   Habibullah Pagarkar
@@ -49,6 +50,9 @@
 (eval-when-compile
   (require 'cl))
 
+(defvar android-mode-default-builders
+  '(ant gradle maven))
+
 (defgroup android-mode nil
   "A minor mode for Android application development"
   :prefix "android-mode-"
@@ -71,18 +75,34 @@
   :group 'android-mode)
 
 (defcustom android-mode-builder 'ant
-  "Builder for building an android application."
-  :type 'string
+  "Builder for building an android application.
+When customizing `android-mode-builder' it's important to make
+sure that a corresponding entry exists in
+`android-mode-root-file-plist'."
+  :type 'symbol
+  :options android-mode-default-builders
+  :group 'android-mode)
+
+(defcustom android-mode-root-file-plist '(ant "AndroidManifest.xml"
+                                          maven  "AndroidManifest.xml"
+                                          gradle "build.gradle")
+  "Plist of mapping between different builders and the file that
+  signifies the root of a project that uses that builder."
+  :type '(plist :key-type symbol
+                :value-type string)
+  :options android-mode-default-builders
   :group 'android-mode)
 
 (eval-and-compile
   (defcustom android-mode-build-command-alist
     '((ant . "ant -e")
-      (maven . "mvn"))
+      (maven . "mvn")
+      (gradle . "./gradlew"))
     "Alist that specifies specific build command according to builder type.
 
 Each elt has the form (BUILDER COMMAND)."
     :type '(alist :key-type symbol :value-type string)
+    :options android-mode-default-builders
     :group 'android-mode))
 
 (defcustom android-mode-key-prefix "\C-c \C-c"
@@ -123,14 +143,20 @@ Each elt has the form (BUILDER COMMAND)."
     ("E" . android-mode-error-face)))
 
 (defvar android-mode-log-filter-regexp ""
-  "With this, user can filter output in
-  `android-logcat-buffer'. If received line from logcat doesn't
-  match this, emacs will ignore that line. User can see their log
-  in a less verbose way.")
+  "With this, user can filter output in `android-logcat-buffer'.
+If received line from logcat doesn't match this, Emacs will
+ignore that line.  User can see their log in a less verbose
+way.")
 
 (defun android-root ()
   "Look for AndroidManifest.xml file to find project root of android application."
-  (locate-dominating-file default-directory "AndroidManifest.xml"))
+  (let ((dominating-file (plist-get android-mode-root-file-plist
+                                    android-mode-builder)))
+    (if dominating-file
+        (locate-dominating-file default-directory dominating-file)
+      (message "%s was not found in `android-mode-root-file-plist'"
+               android-mode-builder)
+      nil)))
 
 (defmacro android-in-root (body)
   "Execute BODY form with project root directory as
@@ -160,8 +186,9 @@ variable."
    android-mode-sdk-dir))
 
 (defun android-tool-path (name)
-  "Find path to SDK tool. Calls `android-local-sdk-dir' to try to find locally
-defined sdk directory. Defaults to `android-mode-sdk-dir'."
+  "Find path to SDK tool.
+Calls `android-local-sdk-dir' to try to find locally defined sdk
+directory.  Defaults to `android-mode-sdk-dir'."
   (or (cl-find-if #'file-exists-p
                   (apply #'append
                          (mapcar (lambda (path)
@@ -187,7 +214,7 @@ defined sdk directory. Defaults to `android-mode-sdk-dir'."
                                                android-exclusive-processes))))
 
 (defun android-create-project (path package activity)
-  "Create new Android project with SDK app"
+  "Create new Android project with SDK app."
   (interactive "FPath: \nMPackage: \nMActivity: ")
   (let* ((target (completing-read "Target: " (android-list-targets)))
          (expanded-path (expand-file-name path))
@@ -460,6 +487,7 @@ logs"
 
 (android-defun-builder "ant")
 (android-defun-builder "maven")
+(android-defun-builder "gradle")
 
 ;; Ant
 (defmacro android-defun-ant-task (task)
@@ -492,12 +520,28 @@ logs"
 (android-defun-maven-task "android:redeploy")
 (android-defun-maven-task "android:undeploy")
 
+(defmacro android-defun-gradle-task (task)
+  `(defun ,(intern (concat "android-gradle-"
+                           (replace-regexp-in-string "[[:space:]:]" "-" task)))
+       ()
+     ,(concat "Run gradle " task " in the project root directory.")
+     (interactive)
+     (android-gradle ,task)))
+
+(android-defun-gradle-task "clean")
+(android-defun-gradle-task "test")
+(android-defun-gradle-task "assembleDebug")
+(android-defun-gradle-task "assembleRelease")
+(android-defun-gradle-task "installDebug")
+(android-defun-gradle-task "uninstallDebug")
+
 ;; Common build functions
 (defun android-build-clean ()
   "Remove output files created by building."
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-clean)
+             ('gradle 'android-gradle-clean)
              ('maven 'android-maven-clean))))
 
 (defun android-build-test ()
@@ -505,6 +549,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-test)
+             ('gradle 'android-gradle-test)
              ('maven 'android-maven-test))))
 
 (defun android-build-debug ()
@@ -512,6 +557,7 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-debug)
+             ('gradle 'android-gradle-assembleDebug)
              ('maven 'android-maven-install))))
 
 (defun android-build-install ()
@@ -519,22 +565,23 @@ logs"
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-installd)
+             ('gradle 'android-gradle-installDebug)
              ('maven 'android-maven-android-deploy))))
 
 (defun android-build-reinstall ()
   "Reinstall a generated apk file to the device."
   (interactive)
-  (cond ((eql android-mode-builder 'maven)
-           (android-maven-android-redeploy))
-        (t
-         (error "%s builder does not support reinstall"
-                android-mode-builder))))
+  (funcall (case android-mode-builder
+             ('maven 'android-maven-android-deploy)
+             (t (error "%s builder does not support reinstall"
+                       android-mode-builder)))))
 
 (defun android-build-uninstall ()
   "Uninstall a generated apk file from the device."
   (interactive)
   (funcall (case android-mode-builder
              ('ant 'android-ant-uninstall)
+             ('gradle 'android-gradle-uninstallDebug)
              ('maven 'android-maven-android-undeploy))))
 
 (defconst android-mode-keys
