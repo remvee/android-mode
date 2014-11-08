@@ -47,11 +47,11 @@
 
 (require 'cl-lib)
 (require 'xml)
-(eval-when-compile
-  (require 'cl))
+(eval-when-compile (require 'cl))
 
-(defvar android-mode-default-builders
-  '(ant gradle maven))
+(eval-when-compile
+  (defvar android-mode-default-builders
+    '(ant gradle maven)))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
