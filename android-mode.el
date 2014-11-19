@@ -49,9 +49,8 @@
 (require 'xml)
 (eval-when-compile (require 'cl))
 
-(eval-when-compile
-  (defvar android-mode-default-builders
-    '(ant gradle maven)))
+(defconst android-mode-default-builders
+  '(ant gradle maven))
 
 (defgroup android-mode nil
   "A minor mode for Android application development"
@@ -93,17 +92,16 @@ sure that a corresponding entry exists in
   :options android-mode-default-builders
   :group 'android-mode)
 
-(eval-and-compile
-  (defcustom android-mode-build-command-alist
-    '((ant . "ant -e")
-      (maven . "mvn")
-      (gradle . "./gradlew"))
-    "Alist that specifies specific build command according to builder type.
+(defcustom android-mode-build-command-alist
+  '((ant . "ant -e")
+    (maven . "mvn")
+    (gradle . "./gradlew"))
+  "Alist that specifies specific build command according to builder type.
 
 Each elt has the form (BUILDER COMMAND)."
-    :type '(alist :key-type symbol :value-type string)
-    :options android-mode-default-builders
-    :group 'android-mode))
+  :type '(alist :key-type symbol :value-type string)
+  :options android-mode-default-builders
+  :group 'android-mode)
 
 (defcustom android-mode-key-prefix "\C-c \C-c"
   "Minor mode keys prefix."
@@ -481,9 +479,8 @@ logs"
      ,(concat "Run " builder " TASKS-OR-GOALS in the project root directory.")
      (interactive "sTasks or Goals: ")
      (android-in-root
-      (compile (concat ,(cdr (assoc (intern builder) android-mode-build-command-alist))
-                       " " tasks-or-goals))))
-  )
+      (compile (concat (cdr (assoc (intern ,builder) android-mode-build-command-alist))
+                       " " tasks-or-goals)))))
 
 (android-defun-builder "ant")
 (android-defun-builder "maven")
