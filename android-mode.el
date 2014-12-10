@@ -103,7 +103,7 @@ Each elt has the form (BUILDER COMMAND)."
   :options android-mode-default-builders
   :group 'android-mode)
 
-(defcustom android-mode-key-prefix "\C-c \C-c"
+(defcustom android-mode-key-prefix "\C-c a"
   "Minor mode keys prefix."
   :type 'string
   :group 'android-mode)
