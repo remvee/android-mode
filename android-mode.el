@@ -5,7 +5,7 @@
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
 ;; Keywords: tools processes
-;; Version: 0.3.3
+;; Version: 0.4.0
 ;; URL: https://github.com/remvee/android-mode
 
 ;; Contributors:
