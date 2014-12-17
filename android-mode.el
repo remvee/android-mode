@@ -57,9 +57,10 @@
   :prefix "android-mode-"
   :group 'applications)
 
-(defcustom android-mode-sdk-dir
-  (or (getenv "ANDROID_HOME") "~/Android/sdk")
-  "Set to the directory containing the Android SDK."
+(defcustom android-mode-sdk-dir "~/Android/sdk"
+  "Set to the directory containing the Android SDK.  This value
+will be overridden by ANDROID_HOME environment variable when
+available."
   :type 'string
   :group 'android-mode)
 
@@ -169,8 +170,8 @@ root directory can be found."
   "Try to find android sdk directory through the local.properties
 file in the android project base directory.  If local.properties
 doesn't exist, it does not contain the sdk-dir property or the
-referred directory does not exist, return `android-mode-sdk-dir'
-variable."
+referred directory does not exist, return the ANDROID_HOME
+environment value otherwise the `android-mode-sdk-dir' variable."
   (or
    (android-in-root
     (let ((local-properties "local.properties"))
@@ -181,12 +182,11 @@ variable."
              (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
                   (let ((sdk-dir (match-string 1)))
                     (and (file-exists-p sdk-dir) sdk-dir)))))))
+   (getenv "ANDROID_HOME")
    android-mode-sdk-dir))
 
 (defun android-tool-path (name)
-  "Find path to SDK tool.
-Calls `android-local-sdk-dir' to try to find locally defined sdk
-directory.  Defaults to `android-mode-sdk-dir'."
+  "Find path to SDK tool."
   (or (cl-find-if #'file-exists-p
                   (apply #'append
                          (mapcar (lambda (path)
