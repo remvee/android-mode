@@ -57,7 +57,7 @@
   :prefix "android-mode-"
   :group 'applications)
 
-(defcustom android-mode-sdk-dir "~/Android/sdk"
+(defcustom android-mode-sdk-dir nil
   "Set to the directory containing the Android SDK.  This value
 will be overridden by ANDROID_HOME environment variable when
 available."
@@ -183,7 +183,8 @@ environment value otherwise the `android-mode-sdk-dir' variable."
                   (let ((sdk-dir (match-string 1)))
                     (and (file-exists-p sdk-dir) sdk-dir)))))))
    (getenv "ANDROID_HOME")
-   android-mode-sdk-dir))
+   android-mode-sdk-dir
+   (error "no SDK directory found")))
 
 (defun android-tool-path (name)
   "Find path to SDK tool."
