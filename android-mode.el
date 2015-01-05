@@ -299,6 +299,7 @@ environment value otherwise the `android-mode-sdk-dir' variable."
     (define-key map (kbd "q") 'delete-window)
     (define-key map (kbd "f") 'android-logcat-set-filter)
     (define-key map (kbd "c") 'android-logcat-clear-filter)
+    (define-key map (kbd "C") 'android-logcat-erase-buffer)
     map))
 
 (defun android-logcat-prepare-msg (msg)
@@ -474,6 +475,13 @@ REGEXP-FILTER."
 logs"
   (interactive)
   (android-logcat-set-filter ""))
+
+(defun android-logcat-erase-buffer ()
+  "Clear the contents of the logcat buffer."
+  (interactive)
+  (with-current-buffer android-logcat-buffer
+    (let ((buffer-read-only nil))
+      (erase-buffer))))
 
 (defmacro android-defun-builder (builder)
   `(defun ,(intern (concat "android-" builder)) (tasks-or-goals)
