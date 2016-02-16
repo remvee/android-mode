@@ -64,6 +64,10 @@ available."
   :type 'string
   :group 'android-mode)
 
+(defcustom android-public-key-file "~/.android/adbkey.pub"
+  :type 'string
+  :group 'android-mode)
+
 (defcustom android-mode-sdk-tool-subdirs '("tools" "platform-tools")
   "List of subdirectors in the SDK containing commandline tools."
   :type '(repeat string)
@@ -589,6 +593,24 @@ logs"
              ('ant 'android-ant-uninstall)
              ('gradle 'android-gradle-uninstallDebug)
              ('maven 'android-maven-android-undeploy))))
+
+(defun extract-ssh-public-key (list)
+  "Extract SSH public key. The base64 body must be at least 700 characters wide (the Android's default length on February 16, 2016). See https://www.ietf.org/rfc/rfc4716.txt for more info about the format"
+  (let ((minimum-body-length 700))
+    (if (< (length (car list)) minimum-body-length)
+	(extract-ssh-public-key (cdr list))
+      (car list)
+      )
+    )
+  )
+
+(defun android-adb-public-key ()
+  "Extract adb's public key."
+  (with-temp-buffer
+    (insert-file-contents public-key-file)
+    (extract-ssh-public-key (split-string (buffer-string)))
+    )
+  )
 
 (defconst android-mode-keys
   '(("d" . android-start-ddms)
