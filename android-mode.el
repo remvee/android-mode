@@ -612,6 +612,15 @@ logs"
     )
   )
 
+(defun android-adb-fingerprint ()
+  "Compute the adb's public key fingerprint. To match the fingerprint shown in the debugging device the first time it receives a connection from a PC."
+  (interactive)
+  (let ((public-key (android-adb-public-key)))
+    (message (upcase
+     (md5 (base64-decode-string public-key)))
+    ))
+  )
+
 (defconst android-mode-keys
   '(("d" . android-start-ddms)
     ("e" . android-start-emulator)
