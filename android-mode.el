@@ -162,9 +162,10 @@ way.")
 ``default-directory''.  The form is not executed when no project
 root directory can be found."
   `(let ((android-root-dir (android-root)))
-     (when android-root-dir
+     (if android-root-dir
        (let ((default-directory android-root-dir))
-         ,body))))
+         ,body)
+       (error "can't find project root"))))
 
 (defun android-local-sdk-dir ()
   "Try to find android sdk directory through the local.properties
