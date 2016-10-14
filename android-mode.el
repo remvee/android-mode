@@ -363,7 +363,7 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   (interactive)
   (when (android-start-exclusive-command android-logcat-buffer
                                          (android-tool-path "adb")
-                                         "logcat")
+                                         "logcat -v brief")
     (set-process-filter (get-buffer-process android-logcat-buffer)
                         #'android-logcat-process-filter)
     (with-current-buffer android-logcat-buffer
