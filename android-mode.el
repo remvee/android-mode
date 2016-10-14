@@ -1,4 +1,4 @@
-;;; android-mode.el --- Minor mode for Android application development
+x;;; android-mode.el --- Minor mode for Android application development
 
 ;; Copyright (C) 2009-2014 R.W van 't Veer
 
@@ -165,7 +165,7 @@ root directory can be found."
      (if android-root-dir
        (let ((default-directory android-root-dir))
          ,body)
-       (error "can't find project root"))))
+       )))
 
 (defun android-local-sdk-dir ()
   "Try to find android sdk directory through the local.properties
