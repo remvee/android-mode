@@ -74,7 +74,7 @@ available."
   :type '(repeat string)
   :group 'android-mode)
 
-(defcustom android-mode-builder 'ant
+(defcustom android-mode-builder 'gradle
   "Builder for building an android application.
 When customizing `android-mode-builder' it's important to make
 sure that a corresponding entry exists in
@@ -85,7 +85,7 @@ sure that a corresponding entry exists in
 
 (defcustom android-mode-root-file-plist '(ant "AndroidManifest.xml"
                                           maven  "AndroidManifest.xml"
-                                          gradle "build.gradle")
+                                          gradle "gradlew")
   "Plist of mapping between different builders and the file that
   signifies the root of a project that uses that builder."
   :type '(plist :key-type symbol
