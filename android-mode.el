@@ -218,10 +218,15 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   "Create new Android project with SDK app."
   (interactive "FPath: \nMPackage: \nMActivity: ")
   (let* ((target (completing-read "Target: " (android-list-targets)))
+         (gradle-version (when (eq android-mode-builder 'gradle)
+                           (read-from-minibuffer "Gradle version: ")))
          (expanded-path (expand-file-name path))
          (command (format "%s create project --path %S --package %s --activity %s --target %S"
                           (android-tool-path "android")
                           expanded-path package activity target))
+         (command (if (not (equal gradle-version nil))
+                      (concat command (format " --gradle --gradle-version %s" gradle-version))
+                    command))
          (output (shell-command-to-string command)))
     (if (string-equal "Error" (substring output 0 5))
         (error output)
