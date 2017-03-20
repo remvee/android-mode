@@ -174,15 +174,16 @@ doesn't exist, it does not contain the sdk-dir property or the
 referred directory does not exist, return the ANDROID_HOME
 environment value otherwise the `android-mode-sdk-dir' variable."
   (or
-   (android-in-root
-    (let ((local-properties "local.properties"))
-      (and (file-exists-p local-properties)
-           (with-temp-buffer
-             (insert-file-contents local-properties)
-             (goto-char (point-min))
-             (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
-                  (let ((sdk-dir (match-string 1)))
-                    (and (file-exists-p sdk-dir) sdk-dir)))))))
+   (ignore-errors
+     (android-in-root
+      (let ((local-properties "local.properties"))
+        (and (file-exists-p local-properties)
+             (with-temp-buffer
+               (insert-file-contents local-properties)
+               (goto-char (point-min))
+               (and (re-search-forward "^sdk\.dir=\\(.*\\)" nil t)
+                    (let ((sdk-dir (match-string 1)))
+                      (and (file-exists-p sdk-dir) sdk-dir))))))))
    (getenv "ANDROID_HOME")
    android-mode-sdk-dir
    (error "no SDK directory found")))
