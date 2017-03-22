@@ -19,6 +19,7 @@
 ;;   Hiroo Matsumoto
 ;;   K. Adam Christensen
 ;;   Haden Pike
+;;   Camilo QS
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -205,7 +206,9 @@ environment value otherwise the `android-mode-sdk-dir' variable."
 (defvar android-exclusive-processes ())
 (defun android-start-exclusive-command (name command &rest args)
   (and (not (cl-find (intern name) android-exclusive-processes))
-       (set-process-sentinel (apply 'start-process-shell-command name name command args)
+       (set-process-sentinel (apply #'start-process-shell-command name name
+                                    (shell-quote-argument command)
+                                    (mapcar #'shell-quote-argument args))
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
                                  (setq android-exclusive-processes
