@@ -115,6 +115,24 @@ Each elt has the form (BUILDER COMMAND)."
   :type 'string
   :group 'android-mode)
 
+(defcustom android-mode-gradle-plugin "2.1.3"
+  "Version of gradle plugin for android.
+--------------------------------
+Plugin version | Gradle version
+--------------------------------
+ 1.0.0 - 1.1.3 | 2.2.1 - 2.3
+ 1.2.0 - 1.3.1 | 2.2.1 - 2.9
+ 1.5.0         | 2.2.1 - 2.13
+ 2.0.0 - 2.1.2 | 2.10 - 2.13
+ 2.1.3 - 2.2.3 | 2.14.1+
+ 2.3.0+        | 3.3+
+--------------------------------
+You need have installed Gradle version compatible with plugin,
+if using the gradle wrapper and have a error try editing the distributionUrl
+in YOUR_PROJECT/gradle/wrapper/gradle-wrapper.properties."
+  :type 'string
+  :group 'android-mode)
+
 (defface android-mode-verbose-face '((t (:foreground "DodgerBlue")))
   "Font Lock face used to highlight VERBOSE log records."
   :group 'android-mode)
@@ -225,6 +243,11 @@ environment value otherwise the `android-mode-sdk-dir' variable."
          (command (format "%s create project --path %S --package %s --activity %s --target %S"
                           (android-tool-path "android")
                           expanded-path package activity target))
+         (command (if (and (eq android-mode-builder 'gradle)
+                           (not (equal android-mode-gradle-plugin nil)))
+                      (concat command (format " --gradle --gradle-version %s"
+                                              android-mode-gradle-plugin))
+                    command))
          (output (shell-command-to-string command)))
     (if (string-equal "Error" (substring output 0 5))
         (error output)
