@@ -181,7 +181,7 @@ way.")
   (android-find-dir (plist-get android-mode-root-file-plist
                                android-mode-builder)))
 
-(defun android-manifest ()
+(defun android-manifest-dir ()
   "Look for AndroidManifest.xml to find the directory it's located in."
   (android-find-dir "AndroidManifest.xml"))
 
@@ -430,7 +430,7 @@ current buffer."
 (defun android-project-package ()
   "Return the package of the Android project"
   (android-in-directory
-   (android-manifest)
+   (android-manifest-dir)
    (let ((root (car (xml-parse-file "AndroidManifest.xml"))))
      (xml-get-attribute root 'package))))
 
@@ -442,7 +442,7 @@ the project package name.
 
 Filter on CATEGORY intent when supplied."
   (android-in-directory
-   (android-manifest)
+   (android-manifest-dir)
    (cl-flet* ((first-xml-child (parent name)
                                (car (xml-get-children parent name)))
               (action-main-p (activity)
