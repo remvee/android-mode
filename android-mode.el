@@ -1,6 +1,6 @@
 ;;; android-mode.el --- Minor mode for Android application development
 
-;; Copyright (C) 2009-2014 R.W van 't Veer
+;; Copyright (C) 2009-2018 R.W van 't Veer
 
 ;; Author: R.W. van 't Veer
 ;; Created: 20 Feb 2009
@@ -20,6 +20,7 @@
 ;;   K. Adam Christensen
 ;;   Haden Pike
 ;;   Camilo QS
+;;   Jonathan Schmeling
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -166,25 +167,32 @@ If received line from logcat doesn't match this, Emacs will
 ignore that line.  User can see their log in a less verbose
 way.")
 
-(defun android-root ()
-  "Look for AndroidManifest.xml file to find project root of android application."
-  (let ((dominating-file (plist-get android-mode-root-file-plist
-                                    android-mode-builder)))
-    (if dominating-file
-        (locate-dominating-file default-directory dominating-file)
-      (message "%s was not found in `android-mode-root-file-plist'"
-               android-mode-builder)
-      nil)))
+(defun android-find-dir (filename)
+  "Look for specified file to find the directory in which the file is located."
+  (if filename
+      (locate-dominating-file default-directory filename)
+    (message "%s was not found in `android-mode-root-file-plist'"
+             android-mode-builder)
+    nil))
 
-(defmacro android-in-root (body)
-  "Execute BODY form with project root directory as
+(defun android-root ()
+  "Look for the builder's main file (AndroidManifest.xml for ant and maven,
+ gradlew for gradle) to find project root of android application."
+  (android-find-dir (plist-get android-mode-root-file-plist
+                               android-mode-builder)))
+
+(defun android-manifest-dir ()
+  "Look for AndroidManifest.xml to find the directory it's located in."
+  (android-find-dir "AndroidManifest.xml"))
+
+(defmacro android-in-directory (chosen-dir body)
+  "Execute BODY form with chosen root directory as
 ``default-directory''.  The form is not executed when no project
 root directory can be found."
-  `(let ((android-root-dir (android-root)))
-     (if android-root-dir
-       (let ((default-directory android-root-dir))
+  `(if ,chosen-dir
+       (let ((default-directory ,chosen-dir))
          ,body)
-       (error "can't find project root"))))
+     (error "can't find project root")))
 
 (defun android-local-sdk-dir ()
   "Try to find android sdk directory through the local.properties
@@ -194,7 +202,8 @@ referred directory does not exist, return the ANDROID_HOME
 environment value otherwise the `android-mode-sdk-dir' variable."
   (or
    (ignore-errors
-     (android-in-root
+     (android-in-directory
+      (android-root)
       (let ((local-properties "local.properties"))
         (and (file-exists-p local-properties)
              (with-temp-buffer
@@ -420,7 +429,8 @@ current buffer."
 
 (defun android-project-package ()
   "Return the package of the Android project"
-  (android-in-root
+  (android-in-directory
+   (android-manifest-dir)
    (let ((root (car (xml-parse-file "AndroidManifest.xml"))))
      (xml-get-attribute root 'package))))
 
@@ -431,7 +441,8 @@ Names starting with a period or a capital letter are prepended by
 the project package name.
 
 Filter on CATEGORY intent when supplied."
-  (android-in-root
+  (android-in-directory
+   (android-manifest-dir)
    (cl-flet* ((first-xml-child (parent name)
                                (car (xml-get-children parent name)))
               (action-main-p (activity)
@@ -515,7 +526,8 @@ logs"
   `(defun ,(intern (concat "android-" builder)) (tasks-or-goals)
      ,(concat "Run " builder " TASKS-OR-GOALS in the project root directory.")
      (interactive "sTasks or Goals: ")
-     (android-in-root
+     (android-in-directory
+      (android-root)
       (compile (concat (cdr (assoc (intern ,builder) android-mode-build-command-alist))
                        " " tasks-or-goals)))))
 
