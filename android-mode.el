@@ -235,7 +235,7 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   "Run COMMAND named NAME with ARGS unless it's already running."
   (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply #'start-process-shell-command name name
-                                    (shell-quote-argument command)
+                                    command
                                     (mapcar #'shell-quote-argument args))
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
