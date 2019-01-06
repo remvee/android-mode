@@ -295,7 +295,9 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   (let ((avd (or (and (not (string= android-mode-avd "")) android-mode-avd)
                  (completing-read "Android Virtual Device: " (android-list-avd)))))
     (unless (android-start-exclusive-command (concat "*android-emulator-" avd "*")
-                                             (concat (android-tool-path "emulator") " -avd " avd))
+                                             (android-tool-path "emulator")
+                                             "-avd"
+                                             avd)
       (message (concat "emulator " avd " already running")))))
 
 (defun android-start-ddms ()
