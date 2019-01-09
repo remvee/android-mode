@@ -235,8 +235,11 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   "Run COMMAND named NAME with ARGS unless it's already running."
   (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply #'start-process-shell-command name name
-                                    (shell-quote-argument command)
-                                    (mapcar #'shell-quote-argument args))
+                                    (concat command
+                                            " "
+                                            (mapconcat #'shell-quote-argument
+                                                       args
+                                                       " ")))
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
                                  (setq android-exclusive-processes
@@ -295,7 +298,9 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   (let ((avd (or (and (not (string= android-mode-avd "")) android-mode-avd)
                  (completing-read "Android Virtual Device: " (android-list-avd)))))
     (unless (android-start-exclusive-command (concat "*android-emulator-" avd "*")
-                                             (concat (android-tool-path "emulator") " -avd " avd))
+                                             (android-tool-path "emulator")
+                                             "-avd"
+                                             avd)
       (message (concat "emulator " avd " already running")))))
 
 (defun android-start-ddms ()
