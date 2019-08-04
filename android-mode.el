@@ -66,7 +66,7 @@ available."
   :type 'string
   :group 'android-mode)
 
-(defcustom android-mode-sdk-tool-subdirs '("tools" "platform-tools")
+(defcustom android-mode-sdk-tool-subdirs '("emulator" "tools" "platform-tools")
   "List of subdirectors in the SDK containing commandline tools."
   :type '(repeat string)
   :group 'android-mode)
