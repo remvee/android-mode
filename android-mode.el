@@ -66,7 +66,7 @@ available."
   :type 'string
   :group 'android-mode)
 
-(defcustom android-mode-sdk-tool-subdirs '("tools" "platform-tools")
+(defcustom android-mode-sdk-tool-subdirs '("emulator" "tools" "platform-tools")
   "List of subdirectors in the SDK containing commandline tools."
   :type '(repeat string)
   :group 'android-mode)
@@ -86,8 +86,8 @@ sure that a corresponding entry exists in
   :group 'android-mode)
 
 (defcustom android-mode-root-file-plist '(ant "AndroidManifest.xml"
-                                          maven  "AndroidManifest.xml"
-                                          gradle "gradlew")
+                                              maven  "AndroidManifest.xml"
+                                              gradle "gradlew")
   "Plist of mapping between different builders and the file that
   signifies the root of a project that uses that builder."
   :type '(plist :key-type symbol
@@ -235,11 +235,11 @@ environment value otherwise the `android-mode-sdk-dir' variable."
   "Run COMMAND named NAME with ARGS unless it's already running."
   (and (not (cl-find (intern name) android-exclusive-processes))
        (set-process-sentinel (apply #'start-process-shell-command name name
-                                    (concat command
-                                            " "
-                                            (mapconcat #'shell-quote-argument
-                                                       args
-                                                       " ")))
+                                    (list (concat command
+                                                  " "
+                                                  (mapconcat #'shell-quote-argument
+                                                             args
+                                                             " "))))
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
                                  (setq android-exclusive-processes
@@ -547,7 +547,7 @@ logs"
 (defmacro android-defun-ant-task (task)
   `(defun ,(intern (concat "android-ant-"
                            (replace-regexp-in-string "[[:space:]]" "-" task)))
-     ()
+       ()
      ,(concat "Run 'ant " task "' in the project root directory.")
      (interactive)
      (android-ant ,task)))
@@ -562,7 +562,7 @@ logs"
 (defmacro android-defun-maven-task (task)
   `(defun ,(intern (concat "android-maven-"
                            (replace-regexp-in-string "[[:space:]:]" "-" task)))
-     ()
+       ()
      ,(concat "Run maven " task " in the project root directory.")
      (interactive)
      (android-maven ,task)))
