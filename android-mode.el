@@ -234,12 +234,12 @@ environment value otherwise the `android-mode-sdk-dir' variable."
 (defun android-start-exclusive-command (name command &rest args)
   "Run COMMAND named NAME with ARGS unless it's already running."
   (and (not (cl-find (intern name) android-exclusive-processes))
-       (set-process-sentinel (apply #'start-process-shell-command name name
-                                    (list (concat command
-                                                  " "
-                                                  (mapconcat #'shell-quote-argument
-                                                             args
-                                                             " "))))
+       (set-process-sentinel (start-process-shell-command name name
+                                                          (concat command
+                                                                  " "
+                                                                  (mapconcat #'shell-quote-argument
+                                                                             args
+                                                                             " ")))
                              (lambda (proc msg)
                                (when (memq (process-status proc) '(exit signal))
                                  (setq android-exclusive-processes
